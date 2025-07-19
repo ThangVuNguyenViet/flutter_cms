@@ -1,0 +1,14 @@
+targets:
+  $default:
+    builders:
+      flutter_cms|cmsBuilder:
+        enabled: true
+
+builders:
+  cmsBuilder:
+    target: ":flutter_cms"
+    import: "package:flutter_cms/builder.dart"
+    builder_factories: ["cmsDataBuilder"]
+    build_extensions: {".dart": [".cms.g.dart"]}
+    auto_apply: dependents
+    build_to: source
