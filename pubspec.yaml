@@ -7,21 +7,30 @@ environment:
   sdk: ^3.7.2
 
 dependencies:
-  dart_mappable: ^4.5.0
+  dart_mappable: ^4.6.1
   flutter:
     sdk: flutter
   form_builder_validators: ^11.2.0
   shadcn_ui: ^0.28.0
+  source_gen: ^4.0.0
+  code_builder: ^4.10.0
+  build: ^4.0.0
+  analyzer: ^8.0.0
+  dart_style: ^3.0.0
+  pub_semver: ^2.1.4
+  image_picker: ^1.1.2
+  file_picker: ^8.1.4
+  shared_preferences: ^2.2.2
+  connectivity_plus: ^6.0.0
+  solidart: ^1.5.4
+  flutter_solidart: ^1.5.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  dart_mappable_builder: ^4.5.0
+  dart_mappable_builder: ^4.6.1
   build_runner: ^2.5.4
-  source_gen: ^2.0.0
-  code_builder: ^4.10.0
-  pub_semver: ^2.1.4
 
 flutter:
   uses-material-design: true

@@ -8,15 +8,18 @@ class CmsBlockField extends CmsField {
   const CmsBlockField({
     required super.name,
     required super.title,
-    required super.option,
+    required CmsBlockOption super.option,
   });
+
+  @override
+  CmsBlockOption get option => super.option as CmsBlockOption;
 }
 
 class CmsBlockFieldConfig extends CmsFieldConfig {
   const CmsBlockFieldConfig({
     super.name,
     super.title,
-    super.option,
+    CmsBlockOption super.option = const CmsBlockOption(),
   });
 
   @override

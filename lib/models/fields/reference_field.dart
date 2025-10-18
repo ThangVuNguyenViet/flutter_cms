@@ -16,15 +16,18 @@ class CmsReferenceField extends CmsField {
   const CmsReferenceField({
     required super.name,
     required super.title,
-    required super.option,
+    required CmsReferenceOption super.option,
   });
+
+  @override
+  CmsReferenceOption get option => super.option as CmsReferenceOption;
 }
 
 class CmsReferenceFieldConfig extends CmsFieldConfig {
   const CmsReferenceFieldConfig({
     super.name,
     super.title,
-    super.option,
+    CmsReferenceOption super.option = const CmsReferenceOption(to: CmsReferenceTo(type: '')),
   });
 
   @override

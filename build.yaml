@@ -3,12 +3,17 @@ targets:
     builders:
       flutter_cms|cmsBuilder:
         enabled: true
+        generate_for:
+          - lib/home_screen_config.dart
 
 builders:
   cmsBuilder:
     target: ":flutter_cms"
     import: "package:flutter_cms/builder.dart"
-    builder_factories: ["cmsDataBuilder"]
+    builder_factories: ["cmsBuilder"]
     build_extensions: {".dart": [".cms.g.dart"]}
     auto_apply: dependents
     build_to: source
+    # To copy the `.g.part` content into `.g.dart` in the source tree
+    applies_builders: ["source_gen:combining_builder"]
+    

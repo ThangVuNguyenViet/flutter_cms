@@ -1,11 +1,11 @@
 {
-    "name": "flutter_cms",
-    "short_name": "flutter_cms",
+    "name": "CMS Studio",
+    "short_name": "CMS Studio",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#ffffff",
+    "theme_color": "#2563eb",
+    "description": "Visual content schema management for Flutter CMS",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

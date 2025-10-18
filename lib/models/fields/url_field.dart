@@ -8,15 +8,18 @@ class CmsUrlField extends CmsField {
   const CmsUrlField({
     required super.name,
     required super.title,
-    required super.option,
+    required CmsUrlOption super.option,
   });
+
+  @override
+  CmsUrlOption get option => super.option as CmsUrlOption;
 }
 
 class CmsUrlFieldConfig extends CmsFieldConfig {
   const CmsUrlFieldConfig({
     super.name,
     super.title,
-    super.option,
+    CmsUrlOption super.option = const CmsUrlOption(),
   });
 
   @override

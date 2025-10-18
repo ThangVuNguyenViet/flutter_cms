@@ -8,15 +8,18 @@ class CmsFileField extends CmsField {
   const CmsFileField({
     required super.name,
     required super.title,
-    required super.option,
+    required CmsFileOption super.option,
   });
+
+  @override
+  CmsFileOption get option => super.option as CmsFileOption;
 }
 
 class CmsFileFieldConfig extends CmsFieldConfig {
   const CmsFileFieldConfig({
     super.name,
     super.title,
-    super.option,
+    CmsFileOption super.option = const CmsFileOption(),
   });
 
   @override

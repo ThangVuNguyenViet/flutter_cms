@@ -10,15 +10,18 @@ class CmsNumberField extends CmsField {
   const CmsNumberField({
     required super.name,
     required super.title,
-    required super.option,
+    required CmsNumberOption super.option,
   });
+
+  @override
+  CmsNumberOption get option => super.option as CmsNumberOption;
 }
 
 class CmsNumberFieldConfig extends CmsFieldConfig {
   const CmsNumberFieldConfig({
     super.name,
     super.title,
-    super.option,
+    CmsNumberOption super.option = const CmsNumberOption(validation: ''),
   });
 
   @override

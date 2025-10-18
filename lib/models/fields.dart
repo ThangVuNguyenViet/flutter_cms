@@ -8,13 +8,9 @@ abstract class CmsOption {
 abstract class CmsField {
   final String name;
   final String title;
-  final CmsOption option;
+  final CmsOption? option;
 
-  const CmsField({
-    required this.name,
-    required this.title,
-    required this.option,
-  });
+  const CmsField({required this.name, required this.title, this.option});
 }
 
 abstract class CmsFieldConfig {

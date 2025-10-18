@@ -16,15 +16,18 @@ class CmsArrayField extends CmsField {
   const CmsArrayField({
     required super.name,
     required super.title,
-    required super.option,
+    CmsArrayOption? super.option,
   });
+
+  @override
+  CmsArrayOption get option => super.option as CmsArrayOption;
 }
 
 class CmsArrayFieldConfig extends CmsFieldConfig {
   const CmsArrayFieldConfig({
     super.name,
     super.title,
-    super.option,
+    CmsArrayOption? super.option,
   });
 
   @override

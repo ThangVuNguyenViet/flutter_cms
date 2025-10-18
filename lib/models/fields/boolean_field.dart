@@ -8,15 +8,18 @@ class CmsBooleanField extends CmsField {
   const CmsBooleanField({
     required super.name,
     required super.title,
-    required super.option,
+    required CmsBooleanOption super.option,
   });
+
+  @override
+  CmsBooleanOption get option => super.option as CmsBooleanOption;
 }
 
 class CmsBooleanFieldConfig extends CmsFieldConfig {
   const CmsBooleanFieldConfig({
     super.name,
     super.title,
-    super.option,
+    CmsBooleanOption super.option = const CmsBooleanOption(),
   });
 
   @override
