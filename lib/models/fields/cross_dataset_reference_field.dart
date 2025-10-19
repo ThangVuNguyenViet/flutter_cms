@@ -37,15 +37,19 @@ class CmsCrossDatasetReferenceField extends CmsField {
   const CmsCrossDatasetReferenceField({
     required super.name,
     required super.title,
-    required super.option,
+    required CmsCrossDatasetReferenceOption super.option,
   });
+
+  @override
+  CmsCrossDatasetReferenceOption get option =>
+      super.option as CmsCrossDatasetReferenceOption;
 }
 
 class CmsCrossDatasetReferenceFieldConfig extends CmsFieldConfig {
   const CmsCrossDatasetReferenceFieldConfig({
     super.name,
     super.title,
-    super.option,
+    CmsCrossDatasetReferenceOption super.option = const CmsCrossDatasetReferenceOption(dataset: '', to: []), // Default empty
   });
 
   @override

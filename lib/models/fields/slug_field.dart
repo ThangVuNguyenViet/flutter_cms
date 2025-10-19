@@ -15,15 +15,18 @@ class CmsSlugField extends CmsField {
   const CmsSlugField({
     required super.name,
     required super.title,
-    required super.option,
+    required CmsSlugOption super.option,
   });
+
+  @override
+  CmsSlugOption get option => super.option as CmsSlugOption;
 }
 
 class CmsSlugFieldConfig extends CmsFieldConfig {
   const CmsSlugFieldConfig({
     super.name,
     super.title,
-    super.option,
+    CmsSlugOption super.option = const CmsSlugOption(source: '', maxLength: 0),
   });
 
   @override

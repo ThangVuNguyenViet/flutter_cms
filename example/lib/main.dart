@@ -1,5 +1,10 @@
-import 'package:flutter_cms/home_screen_config.dart';
+import 'package:example/configs/home_screen_config.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cms/studio/cms_document_type_decoration.dart';
+import 'package:flutter_cms/studio/cms_document_type_sidebar.dart';
+import 'package:flutter_cms/studio/cms_studio.dart';
+import 'package:flutter_cms/studio/default_cms_header.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,75 +15,28 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter CMS Example',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const HomeScreen(),
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final HomeScreenConfig config = HomeScreenConfig.defaultHomeConfig;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(config.title),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Stack(
-        children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              config.backgroundImageAsset,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.grey[200],
-                  child: Center(
-                    child: Text(
-                      'Error loading image: ${config.backgroundImageAsset}',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ),
-                );
-              },
-            ),
+    return ShadApp(
+      home: Scaffold(
+        body: CmsStudio(
+          header: const DefaultCmsHeader(
+            name: 'example-cms',
+            title: 'Example CMS',
+            subtitle: 'Content Management',
+            icon: Icons.dashboard,
           ),
-          // Content Overlay
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                padding: const EdgeInsets.all(20.0),
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(204),
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      config.title,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+          sidebar: CmsDocumentTypeSidebar(
+            documentTypeDecorations: [
+              CmsDocumentTypeDecoration(
+                documentType: homeScreenConfigDocumentType,
+                icon: Icons.home,
               ),
-            ),
+              CmsDocumentTypeDecoration(
+                documentType: homeScreenButtonConfigDocumentType,
+                icon: Icons.smart_button,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

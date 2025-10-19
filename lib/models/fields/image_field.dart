@@ -10,15 +10,18 @@ class CmsImageField extends CmsField {
   const CmsImageField({
     required super.name,
     required super.title,
-    required super.option,
+    required CmsImageOption? super.option,
   });
+
+  @override
+  CmsImageOption? get option => super.option as CmsImageOption;
 }
 
 class CmsImageFieldConfig extends CmsFieldConfig {
   const CmsImageFieldConfig({
     super.name,
     super.title,
-    super.option,
+    CmsImageOption? super.option,
   });
 
   @override
