@@ -1,3 +1,3 @@
 # flutter_cms
 
-A new Flutter project.
+A modern Content Management System built with Flutter and Supabase, providing a flexible and powerful solution for content management
