@@ -1,13 +1,14 @@
 import 'package:flutter_cms/models/fields.dart';
 
 class CmsUrlOption extends CmsOption {
-  const CmsUrlOption();
+  const CmsUrlOption({super.hidden});
 }
 
 class CmsUrlField extends CmsField {
   const CmsUrlField({
     required super.name,
     required super.title,
+    super.description,
     required CmsUrlOption super.option,
   });
 
@@ -19,6 +20,7 @@ class CmsUrlFieldConfig extends CmsFieldConfig {
   const CmsUrlFieldConfig({
     super.name,
     super.title,
+    super.description,
     CmsUrlOption super.option = const CmsUrlOption(),
   });
 

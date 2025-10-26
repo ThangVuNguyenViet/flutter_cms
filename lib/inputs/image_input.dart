@@ -11,26 +11,34 @@ import '../models/fields/image_field.dart';
 
 @Preview(name: 'CmsImageInput')
 Widget preview() => ShadApp(
-      home: CmsImageInput(
-        field: const CmsImageField(
-          name: 'avatar',
-          title: 'Profile Image',
-          option: CmsImageOption(hotspot: false),
-        ),
-      ),
-    );
+  home: CmsImageInput(
+    field: const CmsImageField(
+      name: 'avatar',
+      title: 'Profile Image',
+      option: CmsImageOption(hotspot: false),
+    ),
+  ),
+);
 
 class CmsImageInput extends StatefulWidget {
   final CmsImageField field;
   final CmsData? data;
+  final ValueChanged<String?>? onChanged;
 
-  const CmsImageInput({super.key, required this.field, this.data});
+  const CmsImageInput({
+    super.key,
+    required this.field,
+    this.data,
+    this.onChanged,
+  });
 
   @override
   State<CmsImageInput> createState() => _CmsImageInputState();
 }
 
 class _CmsImageInputState extends State<CmsImageInput> {
+  late final TextEditingController _urlController;
+  late final UndoHistoryController _undoController;
   String? _imageUrl;
   XFile? _pickedImage;
   final ImagePicker _picker = ImagePicker();
@@ -39,6 +47,28 @@ class _CmsImageInputState extends State<CmsImageInput> {
   void initState() {
     super.initState();
     _imageUrl = widget.data?.value?.toString();
+    _urlController = TextEditingController(text: _imageUrl ?? '');
+    _undoController = UndoHistoryController();
+
+    // Listen to text changes
+    _urlController.addListener(_onUrlChanged);
+  }
+
+  void _onUrlChanged() {
+    final value = _urlController.text;
+    setState(() {
+      _imageUrl = value.trim().isEmpty ? null : value.trim();
+      _pickedImage = null; // Clear picked image when URL is entered
+    });
+    widget.onChanged?.call(_imageUrl);
+  }
+
+  @override
+  void dispose() {
+    _urlController.removeListener(_onUrlChanged);
+    _urlController.dispose();
+    _undoController.dispose();
+    super.dispose();
   }
 
   Future<void> _selectImage() async {
@@ -51,15 +81,22 @@ class _CmsImageInputState extends State<CmsImageInput> {
       );
 
       if (image != null) {
+        // Remove listener temporarily to avoid triggering onChange
+        _urlController.removeListener(_onUrlChanged);
         setState(() {
           _pickedImage = image;
-          _imageUrl = null; // Clear URL if we have a local file
+          _imageUrl = image.path;
+          _urlController.text = image.path;
         });
+        _urlController.addListener(_onUrlChanged);
+        widget.onChanged?.call(image.path);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: $e')),
+        ShadToaster.of(context).show(
+          ShadToast(
+            description: Text('Failed to pick image: $e'),
+          ),
         );
       }
     }
@@ -75,25 +112,37 @@ class _CmsImageInputState extends State<CmsImageInput> {
       );
 
       if (photo != null) {
+        // Remove listener temporarily to avoid triggering onChange
+        _urlController.removeListener(_onUrlChanged);
         setState(() {
           _pickedImage = photo;
-          _imageUrl = null; // Clear URL if we have a local file
+          _imageUrl = photo.path;
+          _urlController.text = photo.path;
         });
+        _urlController.addListener(_onUrlChanged);
+        widget.onChanged?.call(photo.path);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to take photo: $e')),
+        ShadToaster.of(context).show(
+          ShadToast(
+            description: Text('Failed to take photo: $e'),
+          ),
         );
       }
     }
   }
 
   void _removeImage() {
+    // Remove listener temporarily to avoid triggering onChange
+    _urlController.removeListener(_onUrlChanged);
     setState(() {
       _imageUrl = null;
       _pickedImage = null;
+      _urlController.clear();
     });
+    _urlController.addListener(_onUrlChanged);
+    widget.onChanged?.call(null);
   }
 
   void _showImageSourceDialog() {
@@ -129,62 +178,77 @@ class _CmsImageInputState extends State<CmsImageInput> {
   }
 
   Widget _buildImagePreview(ShadThemeData theme) {
-    if (_pickedImage != null) {
+    if (_imageUrl == null && _pickedImage == null) {
+      return const SizedBox.shrink();
+    }
+
+    Widget imageWidget;
+
+    if (_pickedImage != null && !_imageUrl!.startsWith('http')) {
       // Show local file preview
-      return Container(
-        width: 200,
-        height: 200,
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.border),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: kIsWeb
+      imageWidget =
+          kIsWeb
               ? Image.network(
-                  _pickedImage!.path,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Center(
-                      child: Icon(Icons.broken_image, size: 48),
-                    );
-                  },
-                )
+                _pickedImage!.path,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(Icons.broken_image, size: 48),
+                  );
+                },
+              )
               : Image.file(
-                  File(_pickedImage!.path),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Center(
-                      child: Icon(Icons.broken_image, size: 48),
-                    );
-                  },
-                ),
-        ),
-      );
+                File(_pickedImage!.path),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(Icons.broken_image, size: 48),
+                  );
+                },
+              );
     } else if (_imageUrl != null) {
       // Show URL-based image
-      return Container(
-        width: 200,
-        height: 200,
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.border),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            _imageUrl!,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return const Center(
-                child: Icon(Icons.broken_image, size: 48),
-              );
-            },
-          ),
-        ),
+      imageWidget = Image.network(
+        _imageUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.broken_image, size: 48),
+                const SizedBox(height: 8),
+                Text(
+                  'Failed to load image',
+                  style: theme.textTheme.small.copyWith(
+                    color: theme.colorScheme.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return const Center(child: CircularProgressIndicator());
+        },
       );
+    } else {
+      return const SizedBox.shrink();
     }
-    return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      height: 200,
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colorScheme.border),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: imageWidget,
+      ),
+    );
   }
 
   @override
@@ -201,56 +265,90 @@ class _CmsImageInputState extends State<CmsImageInput> {
       children: [
         Text(
           widget.field.title,
-          style: theme.textTheme.small,
+          style: theme.textTheme.small.copyWith(fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
+
+        // URL Input field with upload button
+        Row(
+          children: [
+            Expanded(
+              child: ShadInputFormField(
+                controller: _urlController,
+                undoController: _undoController,
+                placeholder: const Text('Enter image URL or upload...'),
+                maxLines: 1,
+              ),
+            ),
+            const SizedBox(width: 8),
+            ShadButton.outline(
+              onPressed: _showImageSourceDialog,
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.upload, size: 16),
+                  SizedBox(width: 4),
+                  Text('Upload'),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        // Image preview
         if (hasImage) ...[
+          const SizedBox(height: 16),
           _buildImagePreview(theme),
           const SizedBox(height: 8),
           Row(
             children: [
-              ShadButton(
-                onPressed: _showImageSourceDialog,
-                child: const Text('Change Image'),
-              ),
-              const SizedBox(width: 8),
+              if (_pickedImage != null)
+                Expanded(
+                  child: Text(
+                    'File: ${_pickedImage!.name}',
+                    style: theme.textTheme.small.copyWith(
+                      color: theme.colorScheme.mutedForeground,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              if (_pickedImage == null) const Spacer(),
               ShadButton.destructive(
                 onPressed: _removeImage,
-                child: const Text('Remove'),
+                size: ShadButtonSize.sm,
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.delete, size: 14),
+                    SizedBox(width: 4),
+                    Text('Remove'),
+                  ],
+                ),
               ),
             ],
           ),
-        ] else
-          ShadButton(
-            onPressed: _showImageSourceDialog,
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.upload, size: 16),
-                SizedBox(width: 8),
-                Text('Upload Image'),
-              ],
-            ),
-          ),
+        ],
+
+        // Hotspot indicator
         if (widget.field.option?.hotspot ?? false)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: Text(
-              'Hotspot enabled',
-              style: theme.textTheme.small.copyWith(
-                color: theme.colorScheme.mutedForeground,
-              ),
-            ),
-          ),
-        if (_pickedImage != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Text(
-              'File: ${_pickedImage!.name}',
-              style: theme.textTheme.small.copyWith(
-                color: theme.colorScheme.mutedForeground,
-                fontStyle: FontStyle.italic,
-              ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.center_focus_strong,
+                  size: 14,
+                  color: theme.colorScheme.mutedForeground,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Hotspot enabled',
+                  style: theme.textTheme.small.copyWith(
+                    color: theme.colorScheme.mutedForeground,
+                  ),
+                ),
+              ],
             ),
           ),
       ],

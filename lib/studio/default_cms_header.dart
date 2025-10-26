@@ -33,11 +33,7 @@ class DefaultCmsHeader extends StatelessWidget {
           Row(
             children: [
               if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 24,
-                  color: theme.colorScheme.primary,
-                ),
+                Icon(icon, size: 24, color: theme.colorScheme.primary),
                 const SizedBox(width: 12),
               ],
               Expanded(

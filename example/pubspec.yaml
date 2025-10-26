@@ -37,6 +37,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   dart_mappable: ^4.6.1
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -91,3 +92,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+dependency_overrides:
+  test_api: 0.7.6
+  attributed_text:
+    path: ../../super_editor/attributed_text

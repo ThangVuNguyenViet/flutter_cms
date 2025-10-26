@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import 'package:flutter_cms/extensions/object_extensions.dart';
 import 'package:flutter_cms/models/cms_data.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
@@ -17,44 +16,86 @@ Widget preview() => ShadApp(
   ),
 );
 
-class CmsTextInput extends StatelessWidget {
+class CmsTextInput extends StatefulWidget {
   final CmsTextField field;
   final CmsData? data;
+  final ValueChanged<String?>? onChanged;
 
-  const CmsTextInput({super.key, required this.field, this.data});
+  const CmsTextInput({
+    super.key,
+    required this.field,
+    this.data,
+    this.onChanged,
+  });
+
+  @override
+  State<CmsTextInput> createState() => _CmsTextInputState();
+}
+
+class _CmsTextInputState extends State<CmsTextInput> {
+  late final TextEditingController _controller;
+  late final UndoHistoryController _undoController;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialText =
+        widget.data?.value ?? widget.field.option.initialValue ?? '';
+    _controller = TextEditingController(text: initialText);
+    _undoController = UndoHistoryController();
+
+    // Listen to text changes
+    _controller.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    widget.onChanged?.call(_controller.text);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    _undoController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (field.option.hidden) {
+    if (widget.field.option.hidden) {
       return const SizedBox.shrink();
     }
 
+    final theme = ShadTheme.of(context);
     final label =
-        field.option.validation?.labelTransformer?.call(field.title) ??
-        field.title;
+        widget.field.option.validation?.labelTransformer?.call(
+          widget.field.title,
+        ) ??
+        widget.field.title;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (field.option.deprecatedReason case String deprecatedReason)
+        if (widget.field.option.deprecatedReason case String deprecatedReason)
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
               'Deprecated: $deprecatedReason',
-              style: ShadTheme.of(
-                context,
-              ).textTheme.small.copyWith(color: Colors.red),
+              style: theme.textTheme.small.copyWith(color: Colors.red),
             ),
           ),
+
         ShadInputFormField(
-          initialValue: data?.value ?? field.option.initialValue,
-          description: field.option.description?.letOrNull(
-            (desc) => Text(desc),
-          ),
+          controller: _controller,
+          undoController: _undoController,
           label: Text(label),
-          validator: field.option.validation?.labeledValidator(field.title),
-          maxLines: field.option.rows,
-          enabled: !field.option.readOnly,
+          placeholder: const Text('Enter text...'),
+          description:
+              widget.field.description != null
+                  ? Text(widget.field.description!)
+                  : null,
+          maxLines: widget.field.option.rows,
+          readOnly: widget.field.option.readOnly,
         ),
       ],
     );

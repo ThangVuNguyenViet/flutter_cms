@@ -5,7 +5,6 @@ class CmsTextOption extends CmsOption {
   final int rows;
   final CmsValidator? validation;
   final String? initialValue;
-  final String? description;
   final bool readOnly;
   final String? deprecatedReason;
 
@@ -14,7 +13,6 @@ class CmsTextOption extends CmsOption {
     super.hidden,
     this.validation,
     this.initialValue,
-    this.description,
     this.readOnly = false,
     this.deprecatedReason,
   });
@@ -24,6 +22,7 @@ class CmsTextField extends CmsField {
   const CmsTextField({
     required super.name,
     required super.title,
+    super.description,
     CmsTextOption? super.option,
   });
 
@@ -35,6 +34,7 @@ class CmsTextFieldConfig extends CmsFieldConfig {
   const CmsTextFieldConfig({
     super.name,
     super.title,
+    super.description,
     CmsTextOption? super.option,
   });
 

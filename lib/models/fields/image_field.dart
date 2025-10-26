@@ -10,6 +10,7 @@ class CmsImageField extends CmsField {
   const CmsImageField({
     required super.name,
     required super.title,
+    super.description,
     required CmsImageOption? super.option,
   });
 
@@ -21,6 +22,7 @@ class CmsImageFieldConfig extends CmsFieldConfig {
   const CmsImageFieldConfig({
     super.name,
     super.title,
+    super.description,
     CmsImageOption? super.option,
   });
 

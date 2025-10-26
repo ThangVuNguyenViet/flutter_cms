@@ -15,6 +15,7 @@ class CmsSlugField extends CmsField {
   const CmsSlugField({
     required super.name,
     required super.title,
+    super.description,
     required CmsSlugOption super.option,
   });
 
@@ -26,6 +27,7 @@ class CmsSlugFieldConfig extends CmsFieldConfig {
   const CmsSlugFieldConfig({
     super.name,
     super.title,
+    super.description,
     CmsSlugOption super.option = const CmsSlugOption(source: '', maxLength: 0),
   });
 

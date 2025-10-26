@@ -1,17 +1,15 @@
 import 'package:flutter_cms/models/fields.dart';
 
 class CmsStringOption extends CmsOption {
-  const CmsStringOption();
+  const CmsStringOption({super.hidden});
 }
 
 class CmsStringField extends CmsField {
-  final String? description;
-
   const CmsStringField({
     required super.name,
     required super.title,
+    super.description,
     required CmsStringOption super.option,
-    this.description,
   });
 
   @override
@@ -22,6 +20,7 @@ class CmsStringFieldConfig extends CmsFieldConfig {
   const CmsStringFieldConfig({
     super.name,
     super.title,
+    super.description,
     CmsStringOption super.option = const CmsStringOption(),
   });
 

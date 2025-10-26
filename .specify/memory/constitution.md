@@ -1,20 +1,18 @@
 <!--
 ===============================================================================
-SYNC IMPACT REPORT - Constitution v1.2.0 (Data Serialization Amendment)
+SYNC IMPACT REPORT - Constitution v1.3.0 (Text Editing Amendment)
 ===============================================================================
 
-VERSION CHANGE: v1.1.0 → v1.2.0 (Minor: Data class generation principle added)
+VERSION CHANGE: v1.2.0 → v1.3.0 (Minor: SuperEditor text editing principle added)
 
 MODIFIED PRINCIPLES:
-- MODIFIED: III. Developer Experience - Enhanced to include reactive state management and dart_mappable
-- MODIFIED: IV. Build Integration - Updated to include SolidArt and dart_mappable integration requirements
-- NEW: VI. Reactive State Management - SolidArt-based state management principle added
-- NEW: VII. Data Class Generation - dart_mappable for automatic serialization and data classes
+- MODIFIED: III. Developer Experience - Updated to reference SuperEditor for text editing
+- NEW: VIII. Rich Text Editing - SuperEditor-based text editing principle added
 
 ADDED SECTIONS:
-- State Management Requirements section with SolidArt-specific guidelines
-- Data Class Requirements section with dart_mappable-specific guidelines
-- Updated Quality Standards to include reactive state and serialization requirements
+- SuperEditor Integration Requirements section with widget usage guidelines
+- Text Editing Workflow section in Development Workflow
+- Quality Standards updated to include SuperEditor configuration requirements
 
 REMOVED SECTIONS: None
 
@@ -24,7 +22,13 @@ TEMPLATES REQUIRING UPDATES:
 ✅ .specify/templates/tasks-template.md - Task organization supports principles
 ✅ .specify/templates/checklist-template.md - Checklist format supports validation
 
-FOLLOW-UP TODOs: None
+FOLLOW-UP TODOs:
+- Add super_editor package to pubspec.yaml dependencies
+- Update all text input widgets to use SuperEditor or SuperTextField
+- Update block input to use SuperEditor for rich text editing
+- Remove UndoHistoryController implementations in favor of SuperEditor's built-in support
+- Create migration guide for existing text input implementations
+
 ===============================================================================
 -->
 
@@ -48,13 +52,15 @@ runtime type checking allowed in core generated code.
 
 ### III. Developer Experience
 Simple annotations MUST produce powerful, well-documented output with reactive state
-management and automatic serialization. A single `@CmsConfig()` annotation should
-generate complete field lists, configuration classes, reactive signals, dart_mappable
-data classes with fromJson/toJson/copyWith methods, and all necessary infrastructure.
-Generated code MUST include proper documentation comments and clear naming conventions.
-Error messages during generation MUST be actionable and include specific guidance for
-resolution. All studio interfaces MUST use SolidArt signals for reactive state
-updates without manual state management overhead.
+management, automatic serialization, and professional text editing capabilities. A
+single `@CmsConfig()` annotation should generate complete field lists, configuration
+classes, reactive signals, dart_mappable data classes with fromJson/toJson/copyWith
+methods, and all necessary infrastructure. Generated code MUST include proper
+documentation comments and clear naming conventions. Error messages during generation
+MUST be actionable and include specific guidance for resolution. All studio interfaces
+MUST use SolidArt signals for reactive state updates without manual state management
+overhead. All text editing MUST use SuperEditor or SuperTextField for professional
+editing experience with built-in undo/redo support.
 
 ### IV. Build Integration
 Code generation MUST integrate seamlessly with `dart build_runner` and follow Dart
@@ -89,6 +95,17 @@ Serialization field mappings MUST be explicit and type-safe. Custom serializatio
 logic MUST be implemented through dart_mappable hooks and adapters. All generated
 serialization code MUST handle nullable fields and nested objects correctly.
 
+### VIII. Rich Text Editing
+All text input fields MUST use SuperEditor (https://github.com/Flutter-Bounty-Hunters/super_editor)
+for text editing capabilities. Single-line text inputs MUST use `SuperTextField` for
+basic text editing with undo/redo support. Multi-line text inputs MUST use `SuperTextField`
+with multiline configuration. Rich text editing (block inputs) MUST use `SuperEditor`
+with full document editing capabilities including formatting, lists, headers, and
+structured content. Manual TextEditingController implementations are prohibited in
+favor of SuperEditor's built-in controllers. All text inputs MUST support standard
+keyboard shortcuts (Cmd+Z/Ctrl+Z for undo, Cmd+Shift+Z/Ctrl+Y for redo) which are
+automatically provided by SuperEditor.
+
 ## Quality Standards
 
 ### Code Generation Requirements
@@ -116,12 +133,23 @@ serialization code MUST handle nullable fields and nested objects correctly.
 - Date/DateTime serialization MUST use consistent ISO string format
 - All generated serialization methods MUST be tested for round-trip accuracy
 
+### SuperEditor Integration Requirements
+- All text input widgets MUST use `SuperTextField` instead of TextField or ShadInputFormField
+- All rich text editors (block inputs) MUST use `SuperEditor` with DocumentEditor
+- Text controllers MUST use SuperEditor's controller architecture (TextFieldContext, DocumentEditor)
+- Undo/redo functionality MUST be enabled by default on all text inputs (built-in to SuperEditor)
+- Custom text styling MUST use SuperEditor's stylesheet system
+- Keyboard shortcuts MUST follow platform conventions (automatically handled by SuperEditor)
+- Text selection and cursor behavior MUST use SuperEditor's gesture handling
+- NO manual UndoHistoryController or TextEditingController implementations allowed
+
 ### Documentation Requirements
 - Every annotation class MUST have comprehensive dartdoc comments
 - Generated code MUST include header comments indicating generator source
 - Field configurations MUST auto-generate human-readable titles from field names
 - All examples in documentation MUST show complete input/output transformations
 - State management patterns MUST be documented with signal usage examples
+- SuperEditor integration patterns MUST be documented with widget usage examples
 
 ### Testing Requirements
 - All generators MUST have unit tests covering success and error cases
@@ -129,6 +157,7 @@ serialization code MUST handle nullable fields and nested objects correctly.
 - Test coverage MUST include nested `@CmsConfig` classes and all field types
 - Performance tests MUST verify generation time scales linearly with input size
 - Signal reactivity MUST be tested with automated state change verification
+- Text editing functionality MUST be tested with undo/redo scenarios
 
 ## Development Workflow
 
@@ -146,6 +175,14 @@ requirements → Define signals and computed values → Implement reactive effec
 Build SignalBuilder UI components → Test signal reactivity. NO imperative state
 updates or manual listener management allowed.
 
+### Text Editing Workflow
+All text input development MUST follow SuperEditor-first approach: Identify text
+editing requirements → Choose SuperTextField (simple) or SuperEditor (rich) →
+Configure document/field controllers → Implement custom styling if needed →
+Test undo/redo functionality. NO manual TextField, TextFormField, or ShadInputFormField
+widgets allowed for CMS content editing. All text editing MUST use SuperEditor
+components exclusively.
+
 ### Build Process
 - Developers MUST run `dart run build_runner build` after annotation changes
 - CI/CD MUST verify that committed generated files match current annotations
@@ -154,9 +191,9 @@ updates or manual listener management allowed.
 - SolidArt signal generation MUST be verified in build process
 
 ### Breaking Change Policy
-- Major version bumps required for: removing annotations, changing generated class signatures, breaking signal contracts
-- Minor version bumps required for: new annotations, optional annotation parameters, new signal properties
-- Patch version bumps for: bug fixes in generation logic, improved error messages, signal optimization
+- Major version bumps required for: removing annotations, changing generated class signatures, breaking signal contracts, changing SuperEditor integration patterns
+- Minor version bumps required for: new annotations, optional annotation parameters, new signal properties, new text editing features
+- Patch version bumps for: bug fixes in generation logic, improved error messages, signal optimization, text editing UX improvements
 - All breaking changes MUST include automated migration documentation
 
 ## Governance
@@ -165,7 +202,7 @@ Constitutional compliance MUST be verified in all pull requests through automate
 checks and code review. Complexity that violates these principles MUST be
 justified with specific technical rationale and approval from package maintainers.
 All generators and annotations MUST undergo design review before implementation
-to ensure alignment with code generation patterns, reactive state management, and
-developer experience goals.
+to ensure alignment with code generation patterns, reactive state management,
+SuperEditor integration, and developer experience goals.
 
-**Version**: 1.2.0 | **Ratified**: 2025-10-18 | **Last Amended**: 2025-10-18
+**Version**: 1.3.0 | **Ratified**: 2025-10-18 | **Last Amended**: 2025-10-21

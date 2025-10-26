@@ -7,70 +7,76 @@ import '../models/fields/array_field.dart';
 
 @Preview(name: 'CmsArrayInput')
 Widget preview() => ShadApp(
-      home: CmsArrayInput(
-        field: const CmsArrayField(
-          name: 'tags',
-          title: 'Tags',
-          option: CmsArrayOption(
-            of: [CmsArrayOf(type: 'string')],
-          ),
-        ),
-      ),
-    );
+  home: CmsArrayInput(
+    field: CmsArrayField(
+      name: 'tags',
+      title: 'Tags',
+      option: const CmsArrayOption(),
+      itemBuilder: (context, value) => Text(value),
+    ),
+  ),
+);
 
-class CmsArrayInput extends StatefulWidget {
+class CmsArrayInput<T> extends StatefulWidget {
   final CmsArrayField field;
   final CmsData? data;
+  final ValueChanged<List?>? onChanged;
 
-  const CmsArrayInput({super.key, required this.field, this.data});
+  const CmsArrayInput({
+    super.key,
+    required this.field,
+    this.data,
+    this.onChanged,
+  });
 
   @override
-  State<CmsArrayInput> createState() => _CmsArrayInputState();
+  State<CmsArrayInput<T>> createState() => _CmsArrayInputState<T>();
 }
 
-class _CmsArrayInputState extends State<CmsArrayInput> {
-  late List<String> _items;
+class _CmsArrayInputState<T> extends State<CmsArrayInput<T>> {
+  late List<T> _items;
 
   @override
   void initState() {
     super.initState();
-    _items = (widget.data?.value as List?)?.cast<String>() ?? [];
+    _items = (widget.data?.value as List?)?.cast<T>() ?? [];
   }
 
   void _addItem() {
     setState(() {
-      _items.add('');
+      // For now, we'll need a factory method or default value for T
+      // This is a simplified approach - in practice, you'd need a way to create default values
+      if (T == String) {
+        _items.add('' as T);
+      } else if (T == int) {
+        _items.add(0 as T);
+      } else {
+        // For other types, you might need a factory function
+        throw UnsupportedError(
+          'Default value creation not implemented for type $T',
+        );
+      }
     });
+    widget.onChanged?.call(_items);
   }
 
   void _removeItem(int index) {
     setState(() {
       _items.removeAt(index);
     });
+    widget.onChanged?.call(_items);
   }
 
-  void _updateItem(int index, String value) {
+
+  void _onReorder(int oldIndex, int newIndex) {
     setState(() {
-      _items[index] = value;
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final item = _items.removeAt(oldIndex);
+      _items.insert(newIndex, item);
     });
-  }
-
-  void _moveItemUp(int index) {
-    if (index > 0) {
-      setState(() {
-        final item = _items.removeAt(index);
-        _items.insert(index - 1, item);
-      });
-    }
-  }
-
-  void _moveItemDown(int index) {
-    if (index < _items.length - 1) {
-      setState(() {
-        final item = _items.removeAt(index);
-        _items.insert(index + 1, item);
-      });
-    }
+    widget.onChanged?.call(_items);
   }
 
   @override
@@ -124,39 +130,30 @@ class _CmsArrayInputState extends State<CmsArrayInput> {
               ),
             )
           else
-            ListView.builder(
+            ReorderableListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _items.length,
+              onReorder: _onReorder,
               itemBuilder: (context, index) {
                 return Padding(
+                  key: ValueKey('item_$index'),
                   padding: const EdgeInsets.only(bottom: 8.0),
                   child: Row(
                     children: [
-                      Expanded(
-                        child: ShadInputFormField(
-                          initialValue: _items[index],
-                          placeholder: const Text('Enter value...'),
-                          onChanged: (value) => _updateItem(index, value),
-                        ),
+                      Icon(
+                        Icons.drag_handle,
+                        size: 18,
+                        color: theme.colorScheme.mutedForeground,
                       ),
                       const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_upward, size: 18),
-                        onPressed: index > 0 ? () => _moveItemUp(index) : null,
-                        tooltip: 'Move up',
+                      Expanded(
+                        child: widget.field.itemBuilder(context, _items[index]),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_downward, size: 18),
-                        onPressed: index < _items.length - 1
-                            ? () => _moveItemDown(index)
-                            : null,
-                        tooltip: 'Move down',
-                      ),
-                      IconButton(
+                      const SizedBox(width: 8),
+                      ShadIconButton(
                         icon: const Icon(Icons.delete, size: 18),
                         onPressed: () => _removeItem(index),
-                        tooltip: 'Remove',
                       ),
                     ],
                   ),

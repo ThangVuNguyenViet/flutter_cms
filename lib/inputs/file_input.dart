@@ -20,8 +20,9 @@ Widget preview() => ShadApp(
 class CmsFileInput extends StatefulWidget {
   final CmsFileField field;
   final CmsData? data;
+  final ValueChanged<String?>? onChanged;
 
-  const CmsFileInput({super.key, required this.field, this.data});
+  const CmsFileInput({super.key, required this.field, this.data, this.onChanged});
 
   @override
   State<CmsFileInput> createState() => _CmsFileInputState();
@@ -56,11 +57,14 @@ class _CmsFileInputState extends State<CmsFileInput> {
           _fileSize = _pickedFile!.size;
           _fileUrl = null; // Clear URL if we have a local file
         });
+        widget.onChanged?.call(_pickedFile!.path);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick file: $e')),
+        ShadToaster.of(context).show(
+          ShadToast(
+            description: Text('Failed to pick file: $e'),
+          ),
         );
       }
     }
@@ -73,6 +77,7 @@ class _CmsFileInputState extends State<CmsFileInput> {
       _pickedFile = null;
       _fileSize = null;
     });
+    widget.onChanged?.call(null);
   }
 
   String _formatFileSize(int bytes) {
@@ -180,10 +185,9 @@ class _CmsFileInputState extends State<CmsFileInput> {
                     ],
                   ),
                 ),
-                IconButton(
+                ShadIconButton(
                   icon: const Icon(Icons.close, size: 18),
                   onPressed: _removeFile,
-                  tooltip: 'Remove file',
                 ),
               ],
             ),

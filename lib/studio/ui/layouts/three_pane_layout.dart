@@ -49,15 +49,11 @@ class _ThreePaneLayoutState extends State<ThreePaneLayout> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-
         return Row(
           children: [
             // Left Panel
             if (widget.showLeftPanel) ...[
-              SizedBox(
-                width: _leftPanelWidth,
-                child: widget.leftPanel,
-              ),
+              SizedBox(width: _leftPanelWidth, child: widget.leftPanel),
               _ResizeHandle(
                 onDrag: (delta) {
                   setState(() {
@@ -71,9 +67,7 @@ class _ThreePaneLayoutState extends State<ThreePaneLayout> {
             ],
 
             // Center Panel
-            Expanded(
-              child: widget.centerPanel,
-            ),
+            Expanded(child: widget.centerPanel),
 
             // Right Panel
             if (widget.showRightPanel) ...[
@@ -87,10 +81,7 @@ class _ThreePaneLayoutState extends State<ThreePaneLayout> {
                   });
                 },
               ),
-              SizedBox(
-                width: _rightPanelWidth,
-                child: widget.rightPanel,
-              ),
+              SizedBox(width: _rightPanelWidth, child: widget.rightPanel),
             ],
           ],
         );

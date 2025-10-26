@@ -8,6 +8,7 @@ class CmsFileField extends CmsField {
   const CmsFileField({
     required super.name,
     required super.title,
+    super.description,
     required CmsFileOption super.option,
   });
 
@@ -19,6 +20,7 @@ class CmsFileFieldConfig extends CmsFieldConfig {
   const CmsFileFieldConfig({
     super.name,
     super.title,
+    super.description,
     CmsFileOption super.option = const CmsFileOption(),
   });
 

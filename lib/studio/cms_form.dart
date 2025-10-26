@@ -4,8 +4,11 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../inputs/array_input.dart';
 import '../inputs/block_input.dart';
 import '../inputs/boolean_input.dart';
+import '../inputs/checkbox_input.dart';
+import '../inputs/color_input.dart';
 import '../inputs/cross_dataset_reference_input.dart';
 import '../inputs/date_input.dart';
+import '../inputs/dropdown_input.dart';
 import '../inputs/datetime_input.dart';
 import '../inputs/file_input.dart';
 import '../inputs/geopoint_input.dart';
@@ -22,8 +25,11 @@ import '../models/fields.dart';
 import '../models/fields/array_field.dart';
 import '../models/fields/block_field.dart';
 import '../models/fields/boolean_field.dart';
+import '../models/fields/checkbox_field.dart';
+import '../models/fields/color_field.dart';
 import '../models/fields/cross_dataset_reference_field.dart';
 import '../models/fields/date_field.dart';
+import '../models/fields/dropdown_field.dart';
 import '../models/fields/datetime_field.dart';
 import '../models/fields/file_field.dart';
 import '../models/fields/geopoint_field.dart';
@@ -35,10 +41,166 @@ import '../models/fields/slug_field.dart';
 import '../models/fields/string_field.dart';
 import '../models/fields/text_field.dart';
 import '../models/fields/url_field.dart';
+import 'signals/cms_signals.dart';
 
-/// A form widget that renders fields based on CmsFieldConfig list
+/// Type definition for field value change callbacks
+typedef OnFieldChanged = void Function(String fieldName, dynamic value);
+
+/// Type definition for field input builder functions
+typedef FieldInputBuilder =
+    Widget Function(CmsField field, CmsData? data, OnFieldChanged onChanged);
+
+/// Registry of field types to their corresponding input widgets.
+/// Uses switch-case pattern for default field types with optional custom registry.
+class CmsFieldInputRegistry {
+  /// Map of custom field runtime types to their input builder functions
+  static final Map<Type, FieldInputBuilder> _customRegistry =
+      <Type, FieldInputBuilder>{};
+
+  /// Register a custom field input builder for a specific field type.
+  /// This allows extending the form system with custom field types.
+  static void register<T extends CmsField>(FieldInputBuilder builder) {
+    _customRegistry[T] = builder;
+  }
+
+  /// Get the input builder for a given field type using switch-case for defaults.
+  /// Returns null if no builder is available for the type.
+  static FieldInputBuilder? getBuilder(CmsField field) {
+    // Check custom registry first
+    if (_customRegistry.containsKey(field.runtimeType)) {
+      return _customRegistry[field.runtimeType];
+    }
+
+    // Default field builders using switch-case
+    switch (field) {
+      case CmsTextField():
+        return (field, data, onChanged) => CmsTextInput(
+          field: field as CmsTextField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsStringField():
+        return (field, data, onChanged) => CmsStringInput(
+          field: field as CmsStringField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsNumberField():
+        return (field, data, onChanged) => CmsNumberInput(
+          field: field as CmsNumberField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsBooleanField():
+        return (field, data, onChanged) => CmsBooleanInput(
+          field: field as CmsBooleanField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsCheckboxField():
+        return (field, data, onChanged) => CmsCheckboxInput(
+          field: field as CmsCheckboxField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsDateField():
+        return (field, data, onChanged) => CmsDateInput(
+          field: field as CmsDateField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsDateTimeField():
+        return (field, data, onChanged) => CmsDateTimeInput(
+          field: field as CmsDateTimeField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsDropdownField():
+        return (field, data, onChanged) => CmsDropdownInput(
+          field: field as CmsDropdownField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsUrlField():
+        return (field, data, onChanged) => CmsUrlInput(
+          field: field as CmsUrlField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsSlugField():
+        return (field, data, onChanged) => CmsSlugInput(
+          field: field as CmsSlugField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsImageField():
+        return (field, data, onChanged) => CmsImageInput(
+          field: field as CmsImageField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsFileField():
+        return (field, data, onChanged) => CmsFileInput(
+          field: field as CmsFileField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsArrayField():
+        return (field, data, onChanged) => CmsArrayInput(
+          field: field as CmsArrayField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsBlockField():
+        return (field, data, onChanged) => CmsBlockInput(
+          field: field as CmsBlockField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsObjectField():
+        return (field, data, onChanged) => CmsObjectInput(
+          field: field as CmsObjectField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsReferenceField():
+        return (field, data, onChanged) => CmsReferenceInput(
+          field: field as CmsReferenceField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsCrossDatasetReferenceField():
+        return (field, data, onChanged) => CmsCrossDatasetReferenceInput(
+          field: field as CmsCrossDatasetReferenceField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsGeopointField():
+        return (field, data, onChanged) => CmsGeopointInput(
+          field: field as CmsGeopointField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      case CmsColorField():
+        return (field, data, onChanged) => CmsColorInput(
+          field: field as CmsColorField,
+          data: data,
+          onChanged: (value) => onChanged(field.name, value),
+        );
+      default:
+        return null;
+    }
+  }
+
+  /// Check if a builder is available for a given field type.
+  static bool hasBuilder(CmsField field) {
+    return getBuilder(field) != null;
+  }
+}
+
+/// A form widget that renders fields based on CmsField list
 class CmsForm extends StatefulWidget {
-  final List<CmsFieldConfig> fields;
+  final List<CmsField> fields;
   final Map<String, dynamic> data;
   final String? title;
   final String? description;
@@ -60,185 +222,31 @@ class CmsForm extends StatefulWidget {
 }
 
 class _CmsFormState extends State<CmsForm> {
-  late Map<String, dynamic> _formData;
-
-  @override
-  void initState() {
-    super.initState();
-    _formData = Map.from(widget.data);
+  void _handleFieldChange(String fieldName, dynamic value) {
+    // Update the document signal field directly for real-time sync
+    documentDataSignal.updateField(fieldName, value);
   }
 
-  Widget _buildFieldInput(CmsFieldConfig fieldConfig) {
-    final fieldName = fieldConfig.name ?? '';
-    final fieldTitle = fieldConfig.title ?? '';
-    final data = _formData[fieldName] != null
-        ? CmsData(value: _formData[fieldName], path: fieldName)
-        : null;
+  Widget _buildFieldInput(CmsField field) {
+    final fieldName = field.name;
+    final data =
+        widget.data[fieldName] != null
+            ? CmsData(value: widget.data[fieldName], path: fieldName)
+            : null;
 
-    // Match field config to appropriate input widget
-    if (fieldConfig is CmsTextFieldConfig) {
-      return Padding(
-        padding: const EdgeInsets.all(16),
-        child: CmsTextInput(
-          field: CmsTextField(
-            name: fieldName,
-            title: fieldTitle,
-            option:
-                fieldConfig.option as CmsTextOption? ?? const CmsTextOption(),
-          ),
-          data: data,
-        ),
-      );
-    } else if (fieldConfig is CmsStringFieldConfig) {
-      return CmsStringInput(
-        field: CmsStringField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsStringOption? ??
-              const CmsStringOption(),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsNumberFieldConfig) {
-      return CmsNumberInput(
-        field: CmsNumberField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsNumberOption? ??
-              const CmsNumberOption(validation: ''),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsBooleanFieldConfig) {
-      return CmsBooleanInput(
-        field: CmsBooleanField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsBooleanOption? ??
-              const CmsBooleanOption(),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsDateFieldConfig) {
-      return CmsDateInput(
-        field: CmsDateField(
-          name: fieldName,
-          title: fieldTitle,
-          option:
-              fieldConfig.option as CmsDateOption? ?? const CmsDateOption(),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsDateTimeFieldConfig) {
-      return CmsDateTimeInput(
-        field: CmsDateTimeField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsDateTimeOption? ??
-              const CmsDateTimeOption(),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsUrlFieldConfig) {
-      return CmsUrlInput(
-        field: CmsUrlField(
-          name: fieldName,
-          title: fieldTitle,
-          option:
-              fieldConfig.option as CmsUrlOption? ?? const CmsUrlOption(),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsSlugFieldConfig) {
-      return CmsSlugInput(
-        field: CmsSlugField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsSlugOption? ??
-              const CmsSlugOption(source: '', maxLength: 96),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsImageFieldConfig) {
-      return CmsImageInput(
-        field: CmsImageField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsImageOption?,
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsFileFieldConfig) {
-      return CmsFileInput(
-        field: CmsFileField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsFileOption? ??
-              const CmsFileOption(),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsArrayFieldConfig) {
-      return CmsArrayInput(
-        field: CmsArrayField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsArrayOption?,
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsBlockFieldConfig) {
-      return CmsBlockInput(
-        field: CmsBlockField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsBlockOption? ??
-              const CmsBlockOption(),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsObjectFieldConfig) {
-      return CmsObjectInput(
-        field: CmsObjectField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsObjectOption? ??
-              const CmsObjectOption(fields: []),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsReferenceFieldConfig) {
-      return CmsReferenceInput(
-        field: CmsReferenceField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsReferenceOption? ??
-              const CmsReferenceOption(to: CmsReferenceTo(type: '')),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsCrossDatasetReferenceFieldConfig) {
-      return CmsCrossDatasetReferenceInput(
-        field: CmsCrossDatasetReferenceField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsCrossDatasetReferenceOption? ??
-              const CmsCrossDatasetReferenceOption(dataset: '', to: []),
-        ),
-        data: data,
-      );
-    } else if (fieldConfig is CmsGeopointFieldConfig) {
-      return CmsGeopointInput(
-        field: CmsGeopointField(
-          name: fieldName,
-          title: fieldTitle,
-          option: fieldConfig.option as CmsGeopointOption? ??
-              const CmsGeopointOption(),
-        ),
-        data: data,
-      );
+    // Look up the builder for this field type in the registry
+    final builder = CmsFieldInputRegistry.getBuilder(field);
+
+    if (builder != null) {
+      return builder(field, data, _handleFieldChange);
     }
 
+    // If no builder found, return empty widget and log warning
+    assert(
+      false,
+      'No input builder registered for field type: ${field.runtimeType}. '
+      'Register a builder using CmsFieldInputRegistry.register<${field.runtimeType}>().',
+    );
     return const SizedBox.shrink();
   }
 
@@ -263,10 +271,7 @@ class _CmsFormState extends State<CmsForm> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (widget.title != null)
-                            Text(
-                              widget.title!,
-                              style: theme.textTheme.h2,
-                            ),
+                            Text(widget.title!, style: theme.textTheme.h2),
                           if (widget.description != null)
                             Text(
                               widget.description!,
@@ -298,10 +303,10 @@ class _CmsFormState extends State<CmsForm> {
               ],
             ),
           // Dynamic form fields
-          ...widget.fields.map((fieldConfig) {
+          ...widget.fields.map((field) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 20),
-              child: _buildFieldInput(fieldConfig),
+              child: _buildFieldInput(field),
             );
           }),
         ],

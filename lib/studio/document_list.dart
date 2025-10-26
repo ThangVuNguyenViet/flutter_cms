@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_solidart/flutter_solidart.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+
+import 'signals/cms_signals.dart';
 
 /// Document list view for browsing multiple documents of a type
 class CmsDocumentListView extends StatefulWidget {
@@ -25,28 +28,11 @@ class CmsDocumentListView extends StatefulWidget {
 }
 
 class _CmsDocumentListViewState extends State<CmsDocumentListView> {
-  List<Map<String, dynamic>> _documents = [];
-  bool _isLoading = false;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _loadDocuments();
-  }
-
-  Future<void> _loadDocuments() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // TODO: Implement actual document loading with filter
-    // For now, showing empty state until backend implementation
-
-    setState(() {
-      _documents = [];
-      _isLoading = false;
-    });
   }
 
   void _createNewDocument() {
@@ -55,227 +41,233 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
     }
   }
 
-  void _openDocument(String documentId) {
+  void _openDocument(Map<String, dynamic> document) {
     if (widget.onOpenDocument != null) {
+      // Generate a simple ID for now - in real implementation would use proper document ID
+      final documentId = document.hashCode.toString();
       widget.onOpenDocument!(documentId);
     }
   }
 
-  List<Map<String, dynamic>> get _filteredDocuments {
+  List<Map<String, dynamic>> _getFilteredDocuments(
+    List<Map<String, dynamic>> documents,
+  ) {
     if (_searchQuery.isEmpty) {
-      return _documents;
+      return documents;
     }
-    return _documents.where((doc) {
-      final title = doc['title']?.toString().toLowerCase() ?? '';
-      return title.contains(_searchQuery.toLowerCase());
+    return documents.where((doc) {
+      final searchText = doc.values.whereType<String>().join(' ').toLowerCase();
+      return searchText.contains(_searchQuery.toLowerCase());
     }).toList();
+  }
+
+  String _getDocumentTitle(Map<String, dynamic> docData) {
+    // Try to find a title field - common field names
+    for (final key in ['title', 'name', 'label', 'displayName']) {
+      if (docData.containsKey(key) && docData[key] is String) {
+        final title = docData[key] as String;
+        if (title.isNotEmpty) {
+          return title;
+        }
+      }
+    }
+
+    // Fallback to first string value or "Untitled"
+    for (final value in docData.values) {
+      if (value is String && value.isNotEmpty) {
+        return value.length > 30 ? '${value.substring(0, 30)}...' : value;
+      }
+    }
+
+    return 'Untitled Document';
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
 
-    return Column(
-      children: [
-        // Header with search and create button
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: theme.colorScheme.border,
-                width: 1,
+    return SignalBuilder(
+      signal: documentsListSignal,
+      builder: (context, documents, child) {
+        final filteredDocuments = _getFilteredDocuments(documents);
+
+        return Column(
+          children: [
+            // Header with search and create button
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: theme.colorScheme.border, width: 1),
+                ),
               ),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (widget.icon != null) ...[
-                    Icon(
-                      widget.icon,
-                      size: 28,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.title,
-                          style: theme.textTheme.h2,
+                  Row(
+                    children: [
+                      if (widget.icon != null) ...[
+                        Icon(
+                          widget.icon,
+                          size: 28,
+                          color: theme.colorScheme.primary,
                         ),
-                        if (widget.description != null)
-                          Text(
-                            widget.description!,
-                            style: theme.textTheme.small.copyWith(
-                              color: theme.colorScheme.mutedForeground,
-                            ),
-                          ),
+                        const SizedBox(width: 12),
                       ],
-                    ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(widget.title, style: theme.textTheme.h2),
+                            if (widget.description != null)
+                              Text(
+                                widget.description!,
+                                style: theme.textTheme.small.copyWith(
+                                  color: theme.colorScheme.mutedForeground,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      ShadButton(
+                        onPressed: _createNewDocument,
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.add, size: 16),
+                            SizedBox(width: 8),
+                            Text('Create'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  ShadButton(
-                    onPressed: _createNewDocument,
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, size: 16),
-                        SizedBox(width: 8),
-                        Text('Create'),
-                      ],
-                    ),
+                  const SizedBox(height: 16),
+                  // Search bar
+                  ShadInputFormField(
+                    placeholder: const Text('Search documents...'),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
                   ),
+                  if (widget.filter != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Filter: ${widget.filter}',
+                        style: theme.textTheme.small.copyWith(
+                          color: theme.colorScheme.mutedForeground,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 16),
-              // Search bar
-              ShadInputFormField(
-                placeholder: const Text('Search documents...'),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-              ),
-              if (widget.filter != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Filter: ${widget.filter}',
-                    style: theme.textTheme.small.copyWith(
-                      color: theme.colorScheme.mutedForeground,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        // Document list
-        Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _filteredDocuments.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.inbox,
-                            size: 64,
-                            color: theme.colorScheme.mutedForeground,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _searchQuery.isEmpty
-                                ? 'No documents yet'
-                                : 'No documents match your search',
-                            style: theme.textTheme.large.copyWith(
+            ),
+            // Document list
+            Expanded(
+              child:
+                  filteredDocuments.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inbox,
+                              size: 64,
                               color: theme.colorScheme.mutedForeground,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          if (_searchQuery.isEmpty)
-                            ShadButton(
-                              onPressed: _createNewDocument,
-                              child: const Text('Create your first document'),
+                            const SizedBox(height: 16),
+                            Text(
+                              _searchQuery.isEmpty
+                                  ? 'No documents yet'
+                                  : 'No documents match your search',
+                              style: theme.textTheme.large.copyWith(
+                                color: theme.colorScheme.mutedForeground,
+                              ),
                             ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _filteredDocuments.length,
-                      itemBuilder: (context, index) {
-                        final doc = _filteredDocuments[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => _openDocument(doc['_id']),
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: theme.colorScheme.border,
+                          ],
+                        ),
+                      )
+                      : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredDocuments.length,
+                        itemBuilder: (context, index) {
+                          final doc = filteredDocuments[index];
+                          final docData = doc;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _openDocument(doc),
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: theme.colorScheme.border,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  children: [
-                                    if (widget.icon != null) ...[
+                                  child: Row(
+                                    children: [
+                                      if (widget.icon != null) ...[
+                                        Icon(
+                                          widget.icon,
+                                          size: 20,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                        const SizedBox(width: 12),
+                                      ],
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              _getDocumentTitle(docData),
+                                              style: theme.textTheme.small
+                                                  .copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Document #${index + 1}',
+                                              style: theme.textTheme.small
+                                                  .copyWith(
+                                                    color:
+                                                        theme
+                                                            .colorScheme
+                                                            .mutedForeground,
+                                                    fontSize: 12,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                       Icon(
-                                        widget.icon,
+                                        Icons.chevron_right,
                                         size: 20,
-                                        color: theme.colorScheme.primary,
+                                        color:
+                                            theme.colorScheme.mutedForeground,
                                       ),
-                                      const SizedBox(width: 12),
                                     ],
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            doc['title'] ?? 'Untitled',
-                                            style: theme.textTheme.small
-                                                .copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            'Updated: ${_formatDate(doc['updatedAt'])}',
-                                            style: theme.textTheme.small
-                                                .copyWith(
-                                              color: theme
-                                                  .colorScheme.mutedForeground,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.chevron_right,
-                                      size: 20,
-                                      color: theme.colorScheme.mutedForeground,
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-        ),
-      ],
+                          );
+                        },
+                      ),
+            ),
+          ],
+        );
+      },
     );
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Unknown';
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inMinutes < 1) {
-      return 'Just now';
-    } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    }
   }
 }

@@ -20,8 +20,9 @@ Widget preview() => ShadApp(
 class CmsGeopointInput extends StatefulWidget {
   final CmsGeopointField field;
   final CmsData? data;
+  final ValueChanged<Map<String, double>?>? onChanged;
 
-  const CmsGeopointInput({super.key, required this.field, this.data});
+  const CmsGeopointInput({super.key, required this.field, this.data, this.onChanged});
 
   @override
   State<CmsGeopointInput> createState() => _CmsGeopointInputState();
@@ -115,6 +116,15 @@ class _CmsGeopointInputState extends State<CmsGeopointInput> {
                     FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d*')),
                   ],
                   validator: (value) => _validateCoordinate(value, 'latitude'),
+                  onChanged: (value) {
+                    final lat = double.tryParse(value);
+                    final lng = double.tryParse(_lngController.text);
+                    if (lat != null && lng != null) {
+                      widget.onChanged?.call({'lat': lat, 'lng': lng});
+                    } else {
+                      widget.onChanged?.call(null);
+                    }
+                  },
                 ),
               ),
               const SizedBox(width: 16),
@@ -130,6 +140,15 @@ class _CmsGeopointInputState extends State<CmsGeopointInput> {
                   ],
                   validator: (value) =>
                       _validateCoordinate(value, 'longitude'),
+                  onChanged: (value) {
+                    final lat = double.tryParse(_latController.text);
+                    final lng = double.tryParse(value);
+                    if (lat != null && lng != null) {
+                      widget.onChanged?.call({'lat': lat, 'lng': lng});
+                    } else {
+                      widget.onChanged?.call(null);
+                    }
+                  },
                 ),
               ),
             ],
@@ -159,9 +178,9 @@ class _CmsGeopointInputState extends State<CmsGeopointInput> {
             size: ShadButtonSize.sm,
             onPressed: () {
               // TODO: Implement map picker
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Map picker coming soon!'),
+              ShadToaster.of(context).show(
+                const ShadToast(
+                  description: Text('Map picker coming soon!'),
                 ),
               );
             },

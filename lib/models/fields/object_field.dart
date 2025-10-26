@@ -1,8 +1,7 @@
 import 'package:flutter_cms/models/fields.dart';
-import 'package:flutter_cms/models/fields/string_field.dart';
 
 class CmsObjectOption extends CmsOption {
-  final List<CmsStringFieldConfig> fields;
+  final List<CmsField> fields;
 
   const CmsObjectOption({required this.fields, super.hidden});
 }
@@ -11,6 +10,7 @@ class CmsObjectField extends CmsField {
   const CmsObjectField({
     required super.name,
     required super.title,
+    super.description,
     required CmsObjectOption super.option,
   });
 
@@ -22,6 +22,7 @@ class CmsObjectFieldConfig extends CmsFieldConfig {
   const CmsObjectFieldConfig({
     super.name,
     super.title,
+    super.description,
     CmsObjectOption super.option = const CmsObjectOption(
       fields: [],
     ), // Default empty list

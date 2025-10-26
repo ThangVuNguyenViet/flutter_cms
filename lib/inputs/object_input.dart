@@ -16,9 +16,21 @@ Widget preview() => ShadApp(
           title: 'Address',
           option: CmsObjectOption(
             fields: [
-              CmsStringFieldConfig(name: 'street', title: 'Street'),
-              CmsStringFieldConfig(name: 'city', title: 'City'),
-              CmsStringFieldConfig(name: 'zipCode', title: 'Zip Code'),
+              CmsStringField(
+                name: 'street',
+                title: 'Street',
+                option: CmsStringOption(),
+              ),
+              CmsStringField(
+                name: 'city',
+                title: 'City',
+                option: CmsStringOption(),
+              ),
+              CmsStringField(
+                name: 'zipCode',
+                title: 'Zip Code',
+                option: CmsStringOption(),
+              ),
             ],
           ),
         ),
@@ -28,20 +40,15 @@ Widget preview() => ShadApp(
 class CmsObjectInput extends StatelessWidget {
   final CmsObjectField field;
   final CmsData? data;
+  final ValueChanged<Map<String, dynamic>?>? onChanged;
 
-  const CmsObjectInput({super.key, required this.field, this.data});
+  const CmsObjectInput({super.key, required this.field, this.data, this.onChanged});
 
-  Widget _buildFieldInput(CmsFieldConfig fieldConfig) {
+  Widget _buildFieldInput(CmsField field) {
     // For now, we only support string fields in objects
     // TODO: Support all field types recursively
-    if (fieldConfig is CmsStringFieldConfig) {
-      return CmsStringInput(
-        field: CmsStringField(
-          name: fieldConfig.name ?? '',
-          title: fieldConfig.title ?? '',
-          option: fieldConfig.option as CmsStringOption,
-        ),
-      );
+    if (field is CmsStringField) {
+      return CmsStringInput(field: field);
     }
 
     return const SizedBox.shrink();
@@ -71,10 +78,10 @@ class CmsObjectInput extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ...field.option.fields.map((fieldConfig) {
+          ...field.option.fields.map((f) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
-              child: _buildFieldInput(fieldConfig),
+              child: _buildFieldInput(f),
             );
           }),
         ],

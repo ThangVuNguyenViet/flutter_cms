@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_solidart/flutter_solidart.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import 'cms_signals.dart';
 import 'document_editor.dart';
+import 'document_list.dart';
+import 'signals/cms_signals.dart';
 
-/// Main CMS Studio widget
-///
-/// This widget provides the main interface for the CMS with:
-/// - Configurable header widget
-/// - Configurable sidebar widget
-/// - Signal-based document selection
-/// - Dynamic content based on selected document
 class CmsStudio extends StatefulWidget {
   final Widget header;
   final Widget sidebar;
@@ -24,88 +19,130 @@ class CmsStudio extends StatefulWidget {
 
 class _CmsStudioState extends State<CmsStudio> {
   Widget _buildEditor() {
-    return SignalBuilder(
-      signal: selectedDocumentSignal,
-      builder: (context, selectedDocument, child) {
-        if (selectedDocument == null) {
-          return Center(
-            child: Text(
-              'Select a document type from the sidebar',
-              style: ShadTheme.of(context).textTheme.large,
+    final theme = ShadTheme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(color: theme.colorScheme.background),
+      child: SignalBuilder(
+        signal: selectedDocumentSignal,
+        builder: (context, selectedDocument, child) {
+          if (selectedDocument == null) {
+            return _buildEmptyState(
+              icon: Icons.edit,
+              title: 'Document Editor',
+              description:
+                  'Select a document type from the sidebar to start editing',
+            );
+          }
+
+          // Build document editor with padding for better spacing
+          return Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: CmsDocumentEditor(
+              fields: selectedDocument.fields,
+              title: selectedDocument.title,
+              description: selectedDocument.description,
+              documentId: 'new', // TODO: Handle document IDs properly
             ),
           );
-        }
-
-        // Build document editor based on selected document type
-        return CmsDocumentEditor(
-          fields: selectedDocument.fields,
-          title: selectedDocument.title,
-          description: selectedDocument.description,
-          documentId: 'new', // TODO: Handle document IDs properly
-        );
-      },
+        },
+      ),
     );
   }
 
-  Widget _buildContent() {
-    return SignalBuilder(
-      signal: selectedDocumentSignal,
-      builder: (context, selectedDocument, child) {
-        if (selectedDocument == null) {
-          return Center(
-            child: Text(
-              'Select a document type from the sidebar to see preview',
-              style: ShadTheme.of(context).textTheme.large,
-            ),
-          );
-        }
+  Widget _buildContentPreview() {
+    final theme = ShadTheme.of(context);
 
-        // Use the builder if available
-        if (selectedDocument.builder != null) {
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.card,
+        border: Border(left: BorderSide(color: theme.colorScheme.border)),
+      ),
+      child: SignalBuilder(
+        signal: selectedDocumentSignal,
+        builder: (context, selectedDocument, child) {
+          if (selectedDocument == null) {
+            return _buildEmptyState(
+              icon: Icons.visibility,
+              title: 'Content Preview',
+              description:
+                  'Select a document type from the sidebar to see preview',
+            );
+          }
+
+          // Use the builder (now required)
           return SignalBuilder(
             signal: documentDataSignal,
             builder: (context, documentData, child) {
-              // For now, we'll show a placeholder since we need proper CMS config data
-              // TODO: Convert documentData to proper typed CMS config
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.preview,
-                      size: 48,
-                      color: ShadTheme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Content Preview',
-                      style: ShadTheme.of(context).textTheme.large,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Builder: ${selectedDocument.name}',
-                      style: ShadTheme.of(context).textTheme.small,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Live preview will appear here when editor data is connected',
-                      style: ShadTheme.of(context).textTheme.small,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+              if (documentData.isEmpty) {
+                return _buildEmptyState(
+                  icon: Icons.article,
+                  title: 'Content Preview',
+                  description:
+                      'Start editing your document to see the preview here',
+                  showProgress: false,
+                );
+              }
+
+              // Wrap preview content with proper padding
+              return Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: selectedDocument.builder(documentData),
               );
             },
           );
-        }
+        },
+      ),
+    );
+  }
 
-        return Center(
-          child: Text(
-            'No builder defined for ${selectedDocument.title}',
-            style: ShadTheme.of(context).textTheme.large,
-          ),
-        );
-      },
+  Widget _buildDocumentsList() {
+    final theme = ShadTheme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.card,
+        border: Border(right: BorderSide(color: theme.colorScheme.border)),
+      ),
+      child: SignalBuilder(
+        signal: selectedDocumentSignal,
+        builder: (context, selectedDocument, child) {
+          if (selectedDocument == null) {
+            return _buildEmptyState(
+              icon: Icons.folder_open,
+              title: 'Documents',
+              description: 'Select a document type to see available documents',
+            );
+          }
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: CmsDocumentListView(
+              title: selectedDocument.title,
+              description: selectedDocument.description,
+              icon: Icons.description,
+              onCreateNew: () {
+                selectedDocumentSignal.createNewDocument();
+              },
+              onOpenDocument: (documentId) {
+                // Find and load the document by ID
+                final documents =
+                    selectedDocumentSignal.getDocumentsForSelectedType();
+                // For now, use hash code as simple ID lookup
+                final document = documents.firstWhere(
+                  (doc) => doc.hashCode.toString() == documentId,
+                  orElse:
+                      () =>
+                          documents.isNotEmpty
+                              ? documents.first
+                              : throw StateError('No documents found'),
+                );
+                selectedDocumentSignal.loadDocument(document);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -115,48 +152,125 @@ class _CmsStudioState extends State<CmsStudio> {
     return Container(
       width: 250,
       decoration: BoxDecoration(
-        color: theme.colorScheme.background,
-        border: Border(
-          right: BorderSide(color: theme.colorScheme.border, width: 1),
-        ),
+        color: theme.colorScheme.muted.withOpacity(0.3),
+        border: Border(right: BorderSide(color: theme.colorScheme.border)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Custom header
-          widget.header,
-          // Custom sidebar content
-          Expanded(child: widget.sidebar),
+          // Header with improved styling
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.background,
+              border: Border(
+                bottom: BorderSide(color: theme.colorScheme.border),
+              ),
+            ),
+            child: widget.header,
+          ),
+          // Sidebar content with padding
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: widget.sidebar,
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  /// Helper method to build consistent empty states
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String description,
+    bool showProgress = false,
+  }) {
+    final theme = ShadTheme.of(context);
+
+    return SizedBox(
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: ShadCard(
+          width: 320,
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12.0),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 32, color: theme.colorScheme.primary),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: theme.textTheme.h4,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  description,
+                  style: theme.textTheme.muted,
+                  textAlign: TextAlign.center,
+                ),
+                if (showProgress) ...[
+                  const SizedBox(height: 16),
+                  const ShadProgress(),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+
     return Scaffold(
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSidebar(),
-          // Editor panel (left side of main content)
-          Expanded(
-            flex: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(
-                    color: ShadTheme.of(context).colorScheme.border,
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: _buildContent(),
+      backgroundColor: theme.colorScheme.background,
+      body: Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.background,
+          // Add subtle backdrop to entire studio
+        ),
+        child: ResizableContainer(
+          direction: Axis.horizontal,
+          children: [
+            // Sidebar (fixed, non-resizable)
+            ResizableChild(
+              size: ResizableSize.pixels(250),
+              child: _buildSidebar(),
             ),
-          ),
-          // Content preview panel (right side of main content)
-          Expanded(flex: 1, child: _buildEditor()),
-        ],
+
+            // Documents list panel (resizable)
+            ResizableChild(
+              size: ResizableSize.pixels(300),
+              child: _buildDocumentsList(),
+            ),
+
+            // Content preview panel (resizable)
+            ResizableChild(
+              size: ResizableSize.expand(flex: 1),
+              child: _buildContentPreview(),
+            ),
+
+            // Document editor panel (resizable)
+            ResizableChild(
+              size: ResizableSize.pixels(500),
+              child: _buildEditor(),
+            ),
+          ],
+        ),
       ),
     );
   }

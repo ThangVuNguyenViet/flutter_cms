@@ -1,15 +1,19 @@
 import 'package:flutter_cms/models/fields.dart';
+import 'package:flutter_cms/validators/validators.dart';
 
 class CmsNumberOption extends CmsOption {
-  final String validation;
+  final CmsValidator? validation;
+  final double? min;
+  final double? max;
 
-  const CmsNumberOption({required this.validation, super.hidden});
+  const CmsNumberOption({this.validation, this.min, this.max, super.hidden});
 }
 
 class CmsNumberField extends CmsField {
   const CmsNumberField({
     required super.name,
     required super.title,
+    super.description,
     required CmsNumberOption super.option,
   });
 
@@ -21,7 +25,8 @@ class CmsNumberFieldConfig extends CmsFieldConfig {
   const CmsNumberFieldConfig({
     super.name,
     super.title,
-    CmsNumberOption super.option = const CmsNumberOption(validation: ''),
+    super.description,
+    CmsNumberOption super.option = const CmsNumberOption(),
   });
 
   @override

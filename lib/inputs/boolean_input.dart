@@ -19,8 +19,9 @@ Widget preview() => ShadApp(
 class CmsBooleanInput extends StatefulWidget {
   final CmsBooleanField field;
   final CmsData? data;
+  final ValueChanged<bool?>? onChanged;
 
-  const CmsBooleanInput({super.key, required this.field, this.data});
+  const CmsBooleanInput({super.key, required this.field, this.data, this.onChanged});
 
   @override
   State<CmsBooleanInput> createState() => _CmsBooleanInputState();
@@ -51,6 +52,7 @@ class _CmsBooleanInputState extends State<CmsBooleanInput> {
             setState(() {
               _value = value;
             });
+            widget.onChanged?.call(value);
           },
         ),
         const SizedBox(width: 12),

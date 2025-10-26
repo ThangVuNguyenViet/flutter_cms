@@ -12,7 +12,7 @@ Widget preview() => ShadApp(
     field: const CmsNumberField(
       name: 'age',
       title: 'Age',
-      option: CmsNumberOption(validation: ''),
+      option: CmsNumberOption(min: 0, max: 120),
     ),
   ),
 );
@@ -20,8 +20,14 @@ Widget preview() => ShadApp(
 class CmsNumberInput extends StatelessWidget {
   final CmsNumberField field;
   final CmsData? data;
+  final ValueChanged<num?>? onChanged;
 
-  const CmsNumberInput({super.key, required this.field, this.data});
+  const CmsNumberInput({
+    super.key,
+    required this.field,
+    this.data,
+    this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +43,12 @@ class CmsNumberInput extends StatelessWidget {
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
       ],
+      onChanged: (value) {
+        if (onChanged != null) {
+          final numValue = num.tryParse(value);
+          onChanged!(numValue);
+        }
+      },
       validator: (value) {
         if (value.isEmpty) {
           return null;
@@ -44,10 +56,22 @@ class CmsNumberInput extends StatelessWidget {
         if (double.tryParse(value) == null) {
           return 'Please enter a valid number';
         }
-        // Apply custom validation if provided
-        if (field.option.validation.isNotEmpty) {
-          // TODO: Implement custom validation logic
+
+        final numValue = double.parse(value);
+
+        // Check min/max constraints
+        if (field.option.min != null && numValue < field.option.min!) {
+          return 'Value must be at least ${field.option.min}';
         }
+        if (field.option.max != null && numValue > field.option.max!) {
+          return 'Value must be at most ${field.option.max}';
+        }
+
+        // Apply custom validation if provided
+        if (field.option.validation != null) {
+          return field.option.validation!(field.title, numValue);
+        }
+
         return null;
       },
     );

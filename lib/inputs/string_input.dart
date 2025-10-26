@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import 'package:flutter_cms/extensions/object_extensions.dart';
 import 'package:flutter_cms/models/cms_data.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
@@ -8,34 +7,76 @@ import '../models/fields/string_field.dart';
 
 @Preview(name: 'CmsStringInput')
 Widget preview() => ShadApp(
-      home: CmsStringInput(
-        field: const CmsStringField(
-          name: 'username',
-          title: 'Username',
-          option: CmsStringOption(),
-        ),
-      ),
-    );
+  home: CmsStringInput(
+    field: const CmsStringField(
+      name: 'username',
+      title: 'Username',
+      option: CmsStringOption(),
+    ),
+  ),
+);
 
-class CmsStringInput extends StatelessWidget {
+class CmsStringInput extends StatefulWidget {
   final CmsStringField field;
   final CmsData? data;
+  final ValueChanged<String?>? onChanged;
 
-  const CmsStringInput({super.key, required this.field, this.data});
+  const CmsStringInput({
+    super.key,
+    required this.field,
+    this.data,
+    this.onChanged,
+  });
+
+  @override
+  State<CmsStringInput> createState() => _CmsStringInputState();
+}
+
+class _CmsStringInputState extends State<CmsStringInput> {
+  late final TextEditingController _controller;
+  late final UndoHistoryController _undoController;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialText = widget.data?.value?.toString() ?? '';
+    _controller = TextEditingController(text: initialText);
+    _undoController = UndoHistoryController();
+
+    // Listen to text changes
+    _controller.addListener(_onTextChanged);
+    _undoController.addListener(
+      () => print('_undoController.value: ${_undoController.value}'),
+    );
+  }
+
+  void _onTextChanged() {
+    widget.onChanged?.call(_controller.text);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    _undoController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (field.option.hidden) {
+    if (widget.field.option.hidden) {
       return const SizedBox.shrink();
     }
 
     return ShadInputFormField(
-      initialValue: data?.value?.toString(),
-      description: field.description?.letOrNull(
-        (desc) => Text(desc),
-      ),
-      label: Text(field.title),
+      controller: _controller,
+      undoController: _undoController,
+      label: Text(widget.field.title),
       placeholder: const Text('Enter text...'),
+      description:
+          widget.field.description != null
+              ? Text(widget.field.description!)
+              : null,
       maxLines: 1,
     );
   }

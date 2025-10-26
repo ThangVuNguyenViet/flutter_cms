@@ -31,11 +31,13 @@ Widget preview() => ShadApp(
 class CmsCrossDatasetReferenceInput extends StatefulWidget {
   final CmsCrossDatasetReferenceField field;
   final CmsData? data;
+  final ValueChanged<String?>? onChanged;
 
   const CmsCrossDatasetReferenceInput({
     super.key,
     required this.field,
     this.data,
+    this.onChanged,
   });
 
   @override
@@ -129,6 +131,7 @@ class _CmsCrossDatasetReferenceInputState
                 setState(() {
                   _selectedType = value;
                 });
+                widget.onChanged?.call(null);
               },
             ),
             const SizedBox(height: 16),
@@ -177,7 +180,7 @@ class _CmsCrossDatasetReferenceInputState
                     return Text(ref['title'] ?? '');
                   },
                   onChanged: (value) {
-                    // Handle selection
+                    widget.onChanged?.call(value);
                   },
                 ),
         ],

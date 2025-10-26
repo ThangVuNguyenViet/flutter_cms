@@ -19,8 +19,9 @@ Widget preview() => ShadApp(
 class CmsDateInput extends StatefulWidget {
   final CmsDateField field;
   final CmsData? data;
+  final ValueChanged<DateTime?>? onChanged;
 
-  const CmsDateInput({super.key, required this.field, this.data});
+  const CmsDateInput({super.key, required this.field, this.data, this.onChanged});
 
   @override
   State<CmsDateInput> createState() => _CmsDateInputState();
@@ -61,6 +62,7 @@ class _CmsDateInputState extends State<CmsDateInput> {
               setState(() {
                 _selectedDate = date;
               });
+              widget.onChanged?.call(date);
             }
           },
           child: Text(

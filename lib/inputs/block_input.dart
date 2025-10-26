@@ -2,46 +2,82 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:flutter_cms/models/cms_data.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:super_editor/super_editor.dart';
 
 import '../models/fields/block_field.dart';
 
 @Preview(name: 'CmsBlockInput')
 Widget preview() => ShadApp(
-      home: CmsBlockInput(
-        field: const CmsBlockField(
-          name: 'content',
-          title: 'Content',
-          option: CmsBlockOption(),
-        ),
-      ),
-    );
+  home: CmsBlockInput(
+    field: const CmsBlockField(
+      name: 'content',
+      title: 'Content',
+      option: CmsBlockOption(),
+    ),
+  ),
+);
 
 class CmsBlockInput extends StatefulWidget {
   final CmsBlockField field;
   final CmsData? data;
+  final ValueChanged<dynamic>? onChanged;
 
-  const CmsBlockInput({super.key, required this.field, this.data});
+  const CmsBlockInput({
+    super.key,
+    required this.field,
+    this.data,
+    this.onChanged,
+  });
 
   @override
   State<CmsBlockInput> createState() => _CmsBlockInputState();
 }
 
 class _CmsBlockInputState extends State<CmsBlockInput> {
-  late TextEditingController _controller;
-  bool _isBold = false;
-  bool _isItalic = false;
+  late final Editor _editor;
+  late final FocusNode _editorFocusNode;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(
-      text: widget.data?.value?.toString() ?? '',
+
+    _editorFocusNode = FocusNode();
+
+    // Initialize document from data or create empty
+    final initialDocument = _createDocumentFromData();
+
+    _editor = createDefaultDocumentEditor(
+      document: initialDocument,
+      composer: MutableDocumentComposer(),
+      isHistoryEnabled: true,
+    );
+  }
+
+  MutableDocument _createDocumentFromData() {
+    final dataValue = widget.data?.value;
+
+    if (dataValue == null || (dataValue is String && dataValue.isEmpty)) {
+      // Create empty document with a single paragraph
+      return MutableDocument(
+        nodes: [
+          ParagraphNode(id: Editor.createNodeId(), text: AttributedText()),
+        ],
+      );
+    }
+
+    // For now, treat data as plain text
+    final text = dataValue.toString();
+    return MutableDocument(
+      nodes: [
+        ParagraphNode(id: Editor.createNodeId(), text: AttributedText(text)),
+      ],
     );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _editorFocusNode.dispose();
+    _editor.dispose();
     super.dispose();
   }
 
@@ -62,14 +98,14 @@ class _CmsBlockInputState extends State<CmsBlockInput> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Title
           Text(
             widget.field.title,
-            style: theme.textTheme.large.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: theme.textTheme.large.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          // Rich text toolbar (placeholder)
+
+          // Rich text toolbar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -78,68 +114,129 @@ class _CmsBlockInputState extends State<CmsBlockInput> {
             ),
             child: Row(
               children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.format_bold,
-                    size: 18,
-                    color: _isBold ? theme.colorScheme.primary : null,
-                  ),
+                // Text formatting
+                ShadIconButton(
+                  icon: const Icon(Icons.format_bold, size: 18),
                   onPressed: () {
-                    setState(() {
-                      _isBold = !_isBold;
-                    });
+                    final selection = _editor.composer.selection;
+                    if (selection == null) return;
+                    _editor.execute([
+                      ToggleTextAttributionsRequest(
+                        documentRange: selection,
+                        attributions: {boldAttribution},
+                      ),
+                    ]);
                   },
-                  tooltip: 'Bold',
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.format_italic,
-                    size: 18,
-                    color: _isItalic ? theme.colorScheme.primary : null,
-                  ),
+                ShadIconButton(
+                  icon: const Icon(Icons.format_italic, size: 18),
                   onPressed: () {
-                    setState(() {
-                      _isItalic = !_isItalic;
-                    });
+                    final selection = _editor.composer.selection;
+                    if (selection == null) return;
+                    _editor.execute([
+                      ToggleTextAttributionsRequest(
+                        documentRange: selection,
+                        attributions: {italicsAttribution},
+                      ),
+                    ]);
                   },
-                  tooltip: 'Italic',
+                ),
+                ShadIconButton(
+                  icon: const Icon(Icons.format_strikethrough, size: 18),
+                  onPressed: () {
+                    final selection = _editor.composer.selection;
+                    if (selection == null) return;
+                    _editor.execute([
+                      ToggleTextAttributionsRequest(
+                        documentRange: selection,
+                        attributions: {strikethroughAttribution},
+                      ),
+                    ]);
+                  },
                 ),
                 const VerticalDivider(),
-                IconButton(
+
+                // Headers
+                PopupMenuButton<int>(
+                  icon: const Icon(Icons.title, size: 18),
+                  tooltip: 'Headers',
+                  onSelected: (level) {
+                    _editor.execute([
+                      ChangeParagraphBlockTypeRequest(
+                        nodeId: _editor.composer.selection!.extent.nodeId,
+                        blockType:
+                            level == 1
+                                ? header1Attribution
+                                : level == 2
+                                ? header2Attribution
+                                : header3Attribution,
+                      ),
+                    ]);
+                  },
+                  itemBuilder:
+                      (context) => [
+                        const PopupMenuItem(value: 1, child: Text('Heading 1')),
+                        const PopupMenuItem(value: 2, child: Text('Heading 2')),
+                        const PopupMenuItem(value: 3, child: Text('Heading 3')),
+                      ],
+                ),
+
+                // Lists
+                ShadIconButton(
                   icon: const Icon(Icons.format_list_bulleted, size: 18),
                   onPressed: () {
-                    // TODO: Implement bullet list
+                    _editor.execute([
+                      ConvertParagraphToListItemRequest(
+                        nodeId: _editor.composer.selection!.extent.nodeId,
+                        type: ListItemType.unordered,
+                      ),
+                    ]);
                   },
-                  tooltip: 'Bullet list',
                 ),
-                IconButton(
+                ShadIconButton(
                   icon: const Icon(Icons.format_list_numbered, size: 18),
                   onPressed: () {
-                    // TODO: Implement numbered list
+                    _editor.execute([
+                      ConvertParagraphToListItemRequest(
+                        nodeId: _editor.composer.selection!.extent.nodeId,
+                        type: ListItemType.ordered,
+                      ),
+                    ]);
                   },
-                  tooltip: 'Numbered list',
-                ),
-                const VerticalDivider(),
-                IconButton(
-                  icon: const Icon(Icons.link, size: 18),
-                  onPressed: () {
-                    // TODO: Implement link insertion
-                  },
-                  tooltip: 'Insert link',
                 ),
               ],
             ),
           ),
           const SizedBox(height: 12),
-          // Rich text editor (using textarea as placeholder)
-          ShadInputFormField(
-            controller: _controller,
-            placeholder: const Text('Start typing...'),
-            maxLines: 10,
+
+          // SuperEditor
+          Container(
+            height: 400,
+            decoration: BoxDecoration(
+              border: Border.all(color: theme.colorScheme.border),
+              borderRadius: BorderRadius.circular(8),
+              color: theme.colorScheme.background,
+            ),
+            padding: const EdgeInsets.all(16),
+            child: SuperEditor(
+              editor: _editor,
+              focusNode: _editorFocusNode,
+              stylesheet: _buildStylesheet(theme),
+              documentOverlayBuilders: [
+                DefaultCaretOverlayBuilder(
+                  caretStyle: CaretStyle(
+                    color: theme.colorScheme.primary,
+                    width: 2,
+                  ),
+                ),
+              ],
+            ),
           ),
+
           const SizedBox(height: 8),
           Text(
-            'Note: Full rich text editor (Portable Text) support coming soon',
+            'Tip: Use Cmd/Ctrl+Z to undo, Cmd/Ctrl+Shift+Z to redo. '
+            'Select text and use toolbar for formatting.',
             style: theme.textTheme.small.copyWith(
               color: theme.colorScheme.mutedForeground,
               fontStyle: FontStyle.italic,
@@ -147,6 +244,43 @@ class _CmsBlockInputState extends State<CmsBlockInput> {
           ),
         ],
       ),
+    );
+  }
+
+  Stylesheet _buildStylesheet(ShadThemeData theme) {
+    return defaultStylesheet.copyWith(
+      addRulesAfter: [
+        StyleRule(BlockSelector.all, (doc, docNode) {
+          return {
+            Styles.textStyle: TextStyle(
+              color: theme.colorScheme.foreground,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          };
+        }),
+        StyleRule(const BlockSelector('header1'), (doc, docNode) {
+          return {
+            Styles.textStyle: theme.textTheme.h1.copyWith(
+              color: theme.colorScheme.foreground,
+            ),
+          };
+        }),
+        StyleRule(const BlockSelector('header2'), (doc, docNode) {
+          return {
+            Styles.textStyle: theme.textTheme.h2.copyWith(
+              color: theme.colorScheme.foreground,
+            ),
+          };
+        }),
+        StyleRule(const BlockSelector('header3'), (doc, docNode) {
+          return {
+            Styles.textStyle: theme.textTheme.h3.copyWith(
+              color: theme.colorScheme.foreground,
+            ),
+          };
+        }),
+      ],
     );
   }
 }

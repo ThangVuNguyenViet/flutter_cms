@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'cms_config.dart';
-import 'cms_signals.dart';
+import 'signals/cms_signals.dart';
 
 /// A navigation item widget for a CmsDocumentType
 class CmsDocumentTypeItem extends StatelessWidget {
@@ -41,14 +41,16 @@ class CmsDocumentTypeItem extends StatelessWidget {
             curve: Curves.easeInOut,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                  : Colors.transparent,
+              color:
+                  isSelected
+                      ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                      : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isSelected
-                    ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                    : Colors.transparent,
+                color:
+                    isSelected
+                        ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                        : Colors.transparent,
                 width: 1,
               ),
             ),
@@ -59,17 +61,19 @@ class CmsDocumentTypeItem extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                        : theme.colorScheme.muted.withValues(alpha: 0.5),
+                    color:
+                        isSelected
+                            ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                            : theme.colorScheme.muted.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     icon ?? Icons.description,
                     size: 20,
-                    color: isSelected
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.mutedForeground,
+                    color:
+                        isSelected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.mutedForeground,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -82,9 +86,10 @@ class CmsDocumentTypeItem extends StatelessWidget {
                         documentType.title,
                         style: theme.textTheme.small.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.foreground,
+                          color:
+                              isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.foreground,
                           fontSize: 14,
                         ),
                       ),

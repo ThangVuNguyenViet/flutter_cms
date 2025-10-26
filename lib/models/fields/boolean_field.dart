@@ -1,13 +1,14 @@
 import 'package:flutter_cms/models/fields.dart';
 
 class CmsBooleanOption extends CmsOption {
-  const CmsBooleanOption();
+  const CmsBooleanOption({super.hidden});
 }
 
 class CmsBooleanField extends CmsField {
   const CmsBooleanField({
     required super.name,
     required super.title,
+    super.description,
     required CmsBooleanOption super.option,
   });
 
@@ -19,6 +20,7 @@ class CmsBooleanFieldConfig extends CmsFieldConfig {
   const CmsBooleanFieldConfig({
     super.name,
     super.title,
+    super.description,
     CmsBooleanOption super.option = const CmsBooleanOption(),
   });
 

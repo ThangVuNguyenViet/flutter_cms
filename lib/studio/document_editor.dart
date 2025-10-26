@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cms/studio/signals/cms_signals.dart';
+import 'package:flutter_solidart/flutter_solidart.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../models/fields.dart';
 import 'cms_form.dart';
 
-/// Document editor widget that dynamically generates forms based on field configurations
+/// Document editor widget that dynamically generates forms based on fields
 class CmsDocumentEditor extends StatefulWidget {
-  final List<CmsFieldConfig> fields;
+  final List<CmsField> fields;
   final String? title;
   final String? description;
   final String documentId;
@@ -23,49 +26,74 @@ class CmsDocumentEditor extends StatefulWidget {
 }
 
 class _CmsDocumentEditorState extends State<CmsDocumentEditor> {
-  Map<String, dynamic> _documentData = {};
-
-  @override
-  void initState() {
-    super.initState();
-    // TODO: Load document data from backend
-    _loadDocument();
-  }
-
-  Future<void> _loadDocument() async {
-    // TODO: Implement actual document loading
-    setState(() {
-      _documentData = {};
-    });
-  }
-
   Future<void> _saveDocument() async {
-    // TODO: Implement actual document saving
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Document saved')),
-      );
+    try {
+      // Save the current document using the signal's save functionality
+      selectedDocumentSignal.saveCurrentDocument();
+
+      if (mounted) {
+        ShadToaster.of(context).show(
+          const ShadToast(
+            description: Text('Document saved successfully'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ShadToaster.of(context).show(
+          ShadToast(
+            description: Text('Failed to save: $e'),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _discardDocument() async {
-    // TODO: Implement actual document discard
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Changes discarded')),
-      );
+    try {
+      // Reset document to its original state by reloading it
+      final selectedDoc = selectedDocumentSignal.value;
+      if (selectedDoc?.createDefault != null) {
+        // Reset to default values
+        final defaultInstance = selectedDoc!.createDefault!();
+        documentDataSignal.updateData(defaultInstance.toMap());
+      } else {
+        // Clear document data
+        documentDataSignal.clearData();
+      }
+
+      if (mounted) {
+        ShadToaster.of(context).show(
+          const ShadToast(
+            description: Text('Changes discarded'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ShadToaster.of(context).show(
+          ShadToast(
+            description: Text('Failed to discard: $e'),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return CmsForm(
-      fields: widget.fields,
-      data: _documentData,
-      title: widget.title,
-      description: widget.description,
-      onSave: _saveDocument,
-      onDiscard: _discardDocument,
+    return SignalBuilder(
+      signal: documentDataSignal,
+      builder: (context, documentData, child) {
+        return CmsForm(
+          fields: widget.fields,
+          data: Map<String, dynamic>.from(documentData),
+          title: widget.title,
+          description: widget.description,
+          onSave: _saveDocument,
+          onDiscard: _discardDocument,
+        );
+      },
     );
   }
 }

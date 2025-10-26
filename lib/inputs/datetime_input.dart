@@ -7,20 +7,21 @@ import '../models/fields/datetime_field.dart';
 
 @Preview(name: 'CmsDateTimeInput')
 Widget preview() => ShadApp(
-      home: CmsDateTimeInput(
-        field: const CmsDateTimeField(
-          name: 'createdAt',
-          title: 'Created At',
-          option: CmsDateTimeOption(),
-        ),
-      ),
-    );
+  home: CmsDateTimeInput(
+    field: const CmsDateTimeField(
+      name: 'createdAt',
+      title: 'Created At',
+      option: CmsDateTimeOption(),
+    ),
+  ),
+);
 
 class CmsDateTimeInput extends StatefulWidget {
   final CmsDateTimeField field;
   final CmsData? data;
+  final ValueChanged<DateTime?>? onChanged;
 
-  const CmsDateTimeInput({super.key, required this.field, this.data});
+  const CmsDateTimeInput({super.key, required this.field, this.data, this.onChanged});
 
   @override
   State<CmsDateTimeInput> createState() => _CmsDateTimeInputState();
@@ -32,7 +33,11 @@ class _CmsDateTimeInputState extends State<CmsDateTimeInput> {
   @override
   void initState() {
     super.initState();
-    _selectedDateTime = widget.data?.value as DateTime?;
+    _selectedDateTime = switch (widget.data?.value) {
+      DateTime dt => dt,
+      String s => DateTime.tryParse(s),
+      _ => null,
+    };
   }
 
   Future<void> _selectDateTime() async {
@@ -49,9 +54,10 @@ class _CmsDateTimeInputState extends State<CmsDateTimeInput> {
 
     final time = await showTimePicker(
       context: context,
-      initialTime: _selectedDateTime != null
-          ? TimeOfDay.fromDateTime(_selectedDateTime!)
-          : TimeOfDay.now(),
+      initialTime:
+          _selectedDateTime != null
+              ? TimeOfDay.fromDateTime(_selectedDateTime!)
+              : TimeOfDay.now(),
     );
 
     if (time == null) return;
@@ -65,6 +71,7 @@ class _CmsDateTimeInputState extends State<CmsDateTimeInput> {
         time.minute,
       );
     });
+    widget.onChanged?.call(_selectedDateTime);
   }
 
   @override
@@ -76,10 +83,7 @@ class _CmsDateTimeInputState extends State<CmsDateTimeInput> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.field.title,
-          style: ShadTheme.of(context).textTheme.small,
-        ),
+        Text(widget.field.title, style: ShadTheme.of(context).textTheme.small),
         const SizedBox(height: 8),
         ShadButton(
           onPressed: _selectDateTime,

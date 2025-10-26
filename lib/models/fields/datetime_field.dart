@@ -1,13 +1,14 @@
 import 'package:flutter_cms/models/fields.dart';
 
 class CmsDateTimeOption extends CmsOption {
-  const CmsDateTimeOption();
+  const CmsDateTimeOption({super.hidden});
 }
 
 class CmsDateTimeField extends CmsField {
   const CmsDateTimeField({
     required super.name,
     required super.title,
+    super.description,
     required CmsDateTimeOption super.option,
   });
 
@@ -19,6 +20,7 @@ class CmsDateTimeFieldConfig extends CmsFieldConfig {
   const CmsDateTimeFieldConfig({
     super.name,
     super.title,
+    super.description,
     CmsDateTimeOption super.option = const CmsDateTimeOption(),
   });
 

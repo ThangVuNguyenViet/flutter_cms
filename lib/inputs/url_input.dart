@@ -16,37 +16,82 @@ Widget preview() => ShadApp(
   ),
 );
 
-class CmsUrlInput extends StatelessWidget {
+class CmsUrlInput extends StatefulWidget {
   final CmsUrlField field;
   final CmsData? data;
+  final ValueChanged<String?>? onChanged;
 
-  const CmsUrlInput({super.key, required this.field, this.data});
+  const CmsUrlInput({
+    super.key,
+    required this.field,
+    this.data,
+    this.onChanged,
+  });
+
+  @override
+  State<CmsUrlInput> createState() => _CmsUrlInputState();
+}
+
+class _CmsUrlInputState extends State<CmsUrlInput> {
+  late final TextEditingController _controller;
+  late final UndoHistoryController _undoController;
+  String? _validationError;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialText = widget.data?.value?.toString() ?? '';
+    _controller = TextEditingController(text: initialText);
+    _undoController = UndoHistoryController();
+
+    // Listen to text changes
+    _controller.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    final value = _controller.text;
+    _validateUrl(value);
+    widget.onChanged?.call(value);
+  }
+
+  void _validateUrl(String value) {
+    if (value.isEmpty) {
+      setState(() => _validationError = null);
+      return;
+    }
+    try {
+      final uri = Uri.parse(value);
+      if (!uri.hasScheme || (!uri.scheme.startsWith('http'))) {
+        setState(() => _validationError = 'Please enter a valid URL starting with http:// or https://');
+      } else {
+        setState(() => _validationError = null);
+      }
+    } catch (e) {
+      setState(() => _validationError = 'Please enter a valid URL');
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    _undoController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (field.option.hidden) {
+    if (widget.field.option.hidden) {
       return const SizedBox.shrink();
     }
 
     return ShadInputFormField(
-      initialValue: data?.value?.toString(),
-      label: Text(field.title),
+      controller: _controller,
+      undoController: _undoController,
+      label: Text(widget.field.title),
       placeholder: const Text('https://example.com'),
-      keyboardType: TextInputType.url,
-      validator: (value) {
-        if (value.isEmpty) {
-          return null;
-        }
-        try {
-          final uri = Uri.parse(value);
-          if (!uri.hasScheme || (!uri.scheme.startsWith('http'))) {
-            return 'Please enter a valid URL starting with http:// or https://';
-          }
-        } catch (e) {
-          return 'Please enter a valid URL';
-        }
-        return null;
-      },
+      maxLines: 1,
+      error: _validationError != null ? (_) => Text(_validationError!) : null,
     );
   }
 }

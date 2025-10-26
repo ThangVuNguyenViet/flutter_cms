@@ -53,7 +53,7 @@ class CmsConfigGenerator extends GeneratorForAnnotation<CmsConfig> {
 
     // 2. Transform each field to CmsData<T>
     final typeChecker = TypeChecker.typeNamed(CmsConfig);
-    final fields = element.fields.where((field) => !field.isStatic).map((
+    final fields = element.fields.where((field) => !field.isStatic && field.name != 'defaultValue').map((
       field,
     ) {
       final fieldType = field.type.getDisplayString();
@@ -84,7 +84,7 @@ class CmsConfigGenerator extends GeneratorForAnnotation<CmsConfig> {
       (b) =>
           b
             ..optionalParameters.addAll(
-              element.fields.where((field) => !field.isStatic).map((field) {
+              element.fields.where((field) => !field.isStatic && field.name != 'defaultValue').map((field) {
                 final fieldName = field.displayName;
                 return Parameter(
                   (b) =>

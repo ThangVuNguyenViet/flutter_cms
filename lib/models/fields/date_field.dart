@@ -8,6 +8,7 @@ class CmsDateField extends CmsField {
   const CmsDateField({
     required super.name,
     required super.title,
+    super.description,
     required CmsDateOption super.option,
   });
 
@@ -19,6 +20,7 @@ class CmsDateFieldConfig extends CmsFieldConfig {
   const CmsDateFieldConfig({
     super.name,
     super.title,
+    super.description,
     CmsDateOption super.option = const CmsDateOption(),
   });
 

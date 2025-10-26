@@ -21,8 +21,9 @@ Widget preview() => ShadApp(
 class CmsReferenceInput extends StatefulWidget {
   final CmsReferenceField field;
   final CmsData? data;
+  final ValueChanged<String?>? onChanged;
 
-  const CmsReferenceInput({super.key, required this.field, this.data});
+  const CmsReferenceInput({super.key, required this.field, this.data, this.onChanged});
 
   @override
   State<CmsReferenceInput> createState() => _CmsReferenceInputState();
@@ -88,7 +89,7 @@ class _CmsReferenceInputState extends State<CmsReferenceInput> {
                   return Text(ref['title'] ?? '');
                 },
                 onChanged: (value) {
-                  // Handle selection
+                  widget.onChanged?.call(value);
                 },
               ),
         const SizedBox(height: 8),

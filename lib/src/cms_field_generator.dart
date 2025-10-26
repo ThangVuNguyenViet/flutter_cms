@@ -4,61 +4,86 @@ import 'package:build/build.dart';
 import 'package:flutter_cms/models/cms_annotations.dart';
 import 'package:source_gen/source_gen.dart';
 
-/// Generates field configuration lists from classes annotated with @CmsConfig.
-/// This generator processes the annotations on fields to create corresponding field config lists.
+/// Generates CmsField lists from classes annotated with @CmsConfig.
+/// This generator processes the @CmsFieldConfig annotations on fields to create
+/// corresponding CmsField instances for runtime use.
 class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
   static final _fieldConfigs = {
     'CmsTextFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
       final option = config?.getField('option');
       final rows = option?.getField('rows')?.toIntValue() ?? 1;
-      final description = option?.getField('description')?.toStringValue();
-      return '''CmsTextFieldConfig(
+      return '''CmsTextField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
-    option: CmsTextOption(rows: $rows${description != null ? ", description: '$description'" : ''}),
+    option: CmsTextOption(rows: $rows),
   )''';
     },
     'CmsStringFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
-      return '''CmsStringFieldConfig(
+      return '''CmsStringField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
+    option: const CmsStringOption(),
   )''';
     },
     'CmsNumberFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
-      return '''CmsNumberFieldConfig(
+      final option = config?.getField('option');
+      final min = option?.getField('min')?.toDoubleValue();
+      final max = option?.getField('max')?.toDoubleValue();
+      final minStr = min != null ? 'min: $min' : '';
+      final maxStr = max != null ? 'max: $max' : '';
+      final params = [minStr, maxStr].where((p) => p.isNotEmpty).join(', ');
+      final optionParams = params.isNotEmpty ? '($params)' : '()';
+      return '''CmsNumberField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
+    option: CmsNumberOption$optionParams,
   )''';
     },
     'CmsBooleanFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
-      return '''CmsBooleanFieldConfig(
+      return '''CmsBooleanField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
+    option: const CmsBooleanOption(),
+  )''';
+    },
+    'CmsCheckboxFieldConfig': (FieldElement field, DartObject? config) {
+      final fieldName = field.name!;
+      final option = config?.getField('option');
+      final label = option?.getField('label')?.toStringValue();
+      final initialValue = option?.getField('initialValue')?.toBoolValue() ?? false;
+      final labelParam = label != null ? "label: '$label', " : '';
+      return '''CmsCheckboxField(
+    name: '$fieldName',
+    title: '${_titleCase(fieldName)}',
+    option: CmsCheckboxOption(${labelParam}initialValue: $initialValue),
   )''';
     },
     'CmsDateFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
-      return '''CmsDateFieldConfig(
+      return '''CmsDateField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
+    option: const CmsDateOption(),
   )''';
     },
     'CmsDateTimeFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
-      return '''CmsDateTimeFieldConfig(
+      return '''CmsDateTimeField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
+    option: const CmsDateTimeOption(),
   )''';
     },
     'CmsUrlFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
-      return '''CmsUrlFieldConfig(
+      return '''CmsUrlField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
+    option: const CmsUrlOption(),
   )''';
     },
     'CmsSlugFieldConfig': (FieldElement field, DartObject? config) {
@@ -66,7 +91,7 @@ class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
       final option = config?.getField('option');
       final source = option?.getField('source')?.toStringValue() ?? '';
       final maxLength = option?.getField('maxLength')?.toIntValue() ?? 96;
-      return '''CmsSlugFieldConfig(
+      return '''CmsSlugField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
     option: CmsSlugOption(source: '$source', maxLength: $maxLength),
@@ -76,7 +101,7 @@ class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
       final fieldName = field.name!;
       final option = config?.getField('option');
       final hotspot = option?.getField('hotspot')?.toBoolValue() ?? false;
-      return '''CmsImageFieldConfig(
+      return '''CmsImageField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
     option: CmsImageOption(hotspot: $hotspot),
@@ -84,23 +109,40 @@ class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
     },
     'CmsFileFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
-      return '''CmsFileFieldConfig(
+      return '''CmsFileField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
+    option: const CmsFileOption(),
   )''';
     },
     'CmsArrayFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
-      return '''CmsArrayFieldConfig(
+
+      // Extract the generic type from CmsArrayFieldConfig<T>
+      final configType = config?.type?.toString() ?? '';
+      final genericTypeMatch = RegExp(
+        r'CmsArrayFieldConfig<(.+?)>',
+      ).firstMatch(configType);
+      final genericType = genericTypeMatch?.group(1) ?? 'dynamic';
+
+      // Find the class name from the field's enclosing element
+      final className = field.enclosingElement.name ?? '';
+      final itemBuilderName = '$className.${fieldName}ItemBuilder';
+
+      return '''CmsArrayField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
+    option: const CmsArrayOption(),
+    itemBuilder: (context, value) =>
+        $itemBuilderName(context, value as $genericType),
   )''';
     },
     'CmsBlockFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
-      return '''CmsBlockFieldConfig(
+      return '''CmsBlockField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
+    option: const CmsBlockOption(),
   )''';
     },
     'CmsReferenceFieldConfig': (FieldElement field, DartObject? config) {
@@ -108,7 +150,7 @@ class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
       final option = config?.getField('option');
       final to = option?.getField('to');
       final toType = to?.getField('type')?.toStringValue() ?? '';
-      return '''CmsReferenceFieldConfig(
+      return '''CmsReferenceField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
     option: CmsReferenceOption(to: CmsReferenceTo(type: '$toType')),
@@ -121,7 +163,7 @@ class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
       final fieldName = field.name!;
       final option = config?.getField('option');
       final dataset = option?.getField('dataset')?.toStringValue() ?? '';
-      return '''CmsCrossDatasetReferenceFieldConfig(
+      return '''CmsCrossDatasetReferenceField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
     option: CmsCrossDatasetReferenceOption(dataset: '$dataset', to: []),
@@ -129,9 +171,84 @@ class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
     },
     'CmsGeopointFieldConfig': (FieldElement field, DartObject? config) {
       final fieldName = field.name!;
-      return '''CmsGeopointFieldConfig(
+      return '''CmsGeopointField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
+    option: const CmsGeopointOption(),
+  )''';
+    },
+    'CmsColorFieldConfig': (FieldElement field, DartObject? config) {
+      final fieldName = field.name!;
+      final option = config?.getField('option');
+      final showAlpha = option?.getField('showAlpha')?.toBoolValue() ?? false;
+      return '''CmsColorField(
+    name: '$fieldName',
+    title: '${_titleCase(fieldName)}',
+    option: const CmsColorOption(showAlpha: $showAlpha),
+  )''';
+    },
+    'CmsDropdownFieldConfig': (FieldElement field, DartObject? config) {
+      final fieldName = field.name!;
+
+      // Extract the generic type from CmsDropdownFieldConfig<T>
+      final configType = config?.type?.toString() ?? '';
+      final genericTypeMatch = RegExp(
+        r'CmsDropdownFieldConfig<(.+?)>',
+      ).firstMatch(configType);
+      final genericType = genericTypeMatch?.group(1) ?? 'String';
+
+      final option = config?.getField('option');
+      final optionsList = option?.getField('options')?.toListValue() ?? [];
+      final defaultValue = option?.getField('defaultValue');
+      final placeholder = option?.getField('placeholder')?.toStringValue();
+
+      // Generate the options list
+      final optionsCode = optionsList.map((opt) {
+        final value = opt.getField('value');
+        final label = opt.getField('label')?.toStringValue() ?? '';
+        String valueCode;
+
+        if (genericType == 'String') {
+          valueCode = "'${value?.toStringValue() ?? ''}'";
+        } else if (genericType == 'int') {
+          valueCode = "${value?.toIntValue() ?? 0}";
+        } else if (genericType == 'double') {
+          valueCode = "${value?.toDoubleValue() ?? 0.0}";
+        } else if (genericType == 'bool') {
+          valueCode = "${value?.toBoolValue() ?? false}";
+        } else {
+          // For enums or other types, use the string representation
+          valueCode = value?.toString() ?? 'null';
+        }
+
+        return "DropdownOption<$genericType>(value: $valueCode, label: '$label')";
+      }).join(', ');
+
+      String defaultValueCode = 'null';
+      if (defaultValue != null) {
+        if (genericType == 'String') {
+          defaultValueCode = "'${defaultValue.toStringValue() ?? ''}'";
+        } else if (genericType == 'int') {
+          defaultValueCode = "${defaultValue.toIntValue() ?? 0}";
+        } else if (genericType == 'double') {
+          defaultValueCode = "${defaultValue.toDoubleValue() ?? 0.0}";
+        } else if (genericType == 'bool') {
+          defaultValueCode = "${defaultValue.toBoolValue() ?? false}";
+        } else {
+          defaultValueCode = defaultValue.toString();
+        }
+      }
+
+      final placeholderParam = placeholder != null ? "placeholder: '$placeholder', " : '';
+      final defaultValueParam = defaultValue != null ? "defaultValue: $defaultValueCode, " : '';
+
+      return '''CmsDropdownField<$genericType>(
+    name: '$fieldName',
+    title: '${_titleCase(fieldName)}',
+    option: CmsDropdownOption<$genericType>(
+      options: [$optionsCode],
+      $defaultValueParam${placeholderParam}allowNull: true,
+    ),
   )''';
     },
   };
@@ -167,22 +284,23 @@ class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
     final documentTypeName =
         '${className.substring(0, 1).toLowerCase()}${className.substring(1)}DocumentType';
 
-    final fields = element.fields.where((f) => !f.isStatic);
+    final fields = element.fields.where(
+      (f) => !f.isStatic && f.name != 'defaultValue',
+    );
     final fieldConfigs = <String>[];
 
     for (final field in fields) {
       String? configCode;
 
       // Check for field-specific annotations
-      for (final entry in _fieldConfigs.entries) {
-        for (final annotation in field.metadata.annotations) {
-          final annotationType = annotation.computeConstantValue()?.type;
-          if (annotationType != null &&
-              annotationType.toString() == entry.key) {
-            configCode = entry.value(field, annotation.computeConstantValue());
-            break;
-          }
-        }
+      for (final annotation in field.metadata.annotations) {
+        final annotationType = annotation.computeConstantValue()?.type;
+        final displayName = annotationType?.element?.displayName;
+
+        configCode = _fieldConfigs[displayName]?.call(
+          field,
+          annotation.computeConstantValue(),
+        );
         if (configCode != null) break;
       }
 
@@ -197,7 +315,7 @@ class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
           final nestedFieldsName =
               '${fieldClassName.substring(0, 1).toLowerCase()}${fieldClassName.substring(1)}Fields';
           final fieldName = field.name!;
-          configCode = '''CmsObjectFieldConfig(
+          configCode = '''CmsObjectField(
     name: '$fieldName',
     title: '${_titleCase(fieldName)}',
     option: CmsObjectOption(fields: $nestedFieldsName),
@@ -217,18 +335,23 @@ class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
             ? "name: '$id',"
             : "name: '${className.substring(0, 1).toLowerCase()}${className.substring(1)}',";
 
+    final builderName =
+        '\$${className.substring(0, 1).toLowerCase()}${className.substring(1)}Builder';
+
     return '''
-/// Generated field configurations for $className
+/// Generated CmsField list for $className
 final $fieldsListName = [
   ${fieldConfigs.join(',\n  ')},
 ];
 
 /// Generated document type for $className
-final $documentTypeName = CmsDocumentType(
+final $documentTypeName = CmsDocumentType<$className>(
   $idField
   title: '$title',
   description: '$description',
   fields: $fieldsListName,
+  builder: $builderName,
+  createDefault: () => $className.defaultValue(),
 );\n''';
   }
 

@@ -3,7 +3,7 @@ import 'package:flutter_solidart/flutter_solidart.dart';
 
 import 'cms_document_type_decoration.dart';
 import 'cms_document_type_item.dart';
-import 'cms_signals.dart';
+import 'signals/cms_signals.dart';
 
 /// A sidebar widget that displays a list of CmsDocumentTypeDecoration navigation items
 class CmsDocumentTypeSidebar extends StatefulWidget {
@@ -32,7 +32,9 @@ class _CmsDocumentTypeSidebarState extends State<CmsDocumentTypeSidebar> {
     if (widget.documentTypeDecorations.isNotEmpty &&
         selectedDocumentSignal.value == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        selectedDocumentSignal.selectDocument(widget.documentTypeDecorations.first.documentType);
+        selectedDocumentSignal.selectDocument(
+          widget.documentTypeDecorations.first.documentType,
+        );
       });
     }
   }
