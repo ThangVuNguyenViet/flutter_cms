@@ -8,7 +8,7 @@ import '../models/fields/array_field.dart';
 @Preview(name: 'CmsArrayInput')
 Widget preview() => ShadApp(
   home: CmsArrayInput(
-    field: CmsArrayField(
+    field: CmsArrayField<String>(
       name: 'tags',
       title: 'Tags',
       option: const CmsArrayOption(),
@@ -18,9 +18,9 @@ Widget preview() => ShadApp(
 );
 
 class CmsArrayInput<T> extends StatefulWidget {
-  final CmsArrayField field;
+  final CmsArrayField<T> field;
   final CmsData? data;
-  final ValueChanged<List?>? onChanged;
+  final ValueChanged<List<T>?>? onChanged;
 
   const CmsArrayInput({
     super.key,
@@ -66,7 +66,6 @@ class _CmsArrayInputState<T> extends State<CmsArrayInput<T>> {
     });
     widget.onChanged?.call(_items);
   }
-
 
   void _onReorder(int oldIndex, int newIndex) {
     setState(() {

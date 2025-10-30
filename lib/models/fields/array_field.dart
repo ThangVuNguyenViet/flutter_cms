@@ -5,7 +5,7 @@ class CmsArrayOption extends CmsOption {
   const CmsArrayOption({super.hidden});
 }
 
-class CmsArrayField extends CmsField {
+class CmsArrayField<T> extends CmsField {
   const CmsArrayField({
     required super.name,
     required super.title,
@@ -14,7 +14,7 @@ class CmsArrayField extends CmsField {
     required this.itemBuilder,
   });
 
-  final CmsArrayFieldItemBuilder<dynamic> itemBuilder;
+  final CmsArrayFieldItemBuilder<T> itemBuilder;
 
   @override
   CmsArrayOption get option => super.option as CmsArrayOption;

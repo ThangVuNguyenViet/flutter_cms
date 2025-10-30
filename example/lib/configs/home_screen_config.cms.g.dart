@@ -17,7 +17,7 @@ final homeScreenConfigFields = [
   CmsTextField(
     name: 'heroSubtitle',
     title: 'Hero Subtitle',
-    option: CmsTextOption(rows: 1),
+    option: CmsTextOption(rows: 3),
   ),
   CmsImageField(
     name: 'backgroundImageUrl',
@@ -38,14 +38,13 @@ final homeScreenConfigFields = [
     name: 'featuredItems',
     title: 'Featured Items',
     option: const CmsArrayOption(),
-    itemBuilder:
-        (context, value) =>
-            HomeScreenConfig.featuredItemsItemBuilder(context, value as String),
+    itemBuilder: (context, value) =>
+        HomeScreenConfig.featuredItemsItemBuilder(context, value as String),
   ),
   CmsNumberField(
     name: 'maxFeaturedItems',
     title: 'Max Featured Items',
-    option: CmsNumberOption(),
+    option: CmsNumberOption(min: 0, max: 10),
   ),
   CmsDateTimeField(
     name: 'lastUpdated',
@@ -75,12 +74,21 @@ final homeScreenConfigFields = [
   CmsDropdownField<String>(
     name: 'layoutStyle',
     title: 'Layout Style',
-    option: CmsDropdownOption<String>(options: [], allowNull: true),
+    option: CmsDropdownOption<String>(
+      options: [
+        DropdownOption(value: 'grid', label: 'Grid Layout'),
+        DropdownOption(value: 'list', label: 'List Layout'),
+        DropdownOption(value: 'carousel', label: 'Carousel Layout'),
+        DropdownOption(value: 'masonry', label: 'Masonry Layout'),
+      ],
+      defaultValue: 'grid',
+      placeholder: 'Select layout style...',
+    ),
   ),
   CmsNumberField(
     name: 'contentPadding',
     title: 'Content Padding',
-    option: CmsNumberOption(),
+    option: CmsNumberOption(min: 8.0, max: 32.0),
   ),
 ];
 
