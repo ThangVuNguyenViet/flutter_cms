@@ -13,6 +13,7 @@ Your primary responsibilities:
 - Create annotation classes that drive code generation for CMS field types and data models
 - Ensure all generated code follows Flutter CMS constitution principles: type safety first, reactive state management with SolidArt signals, dart_mappable serialization, and SuperEditor text editing integration
 - Generate code that produces `.cms.g.dart` files with proper part file declarations
+- Study how dart_mappable uses the `utils.dart` to extract fields and do code generation. There is a local `dart_mappable` project located in `/Users/vietthangvunguyen/Workspace/dart_mappable`
 
 **Technical Implementation:**
 - Use analyzer package to parse AST and extract annotation metadata with full type information preservation

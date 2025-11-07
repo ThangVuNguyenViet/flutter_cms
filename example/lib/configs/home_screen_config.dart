@@ -1,20 +1,12 @@
+import 'dart:async';
+
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:example/screens/homes_creen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cms/models/cms_annotations.dart';
-import 'package:flutter_cms/models/cms_data.dart';
-import 'package:flutter_cms/models/fields/array_field.dart';
-import 'package:flutter_cms/models/fields/boolean_field.dart';
-import 'package:flutter_cms/models/fields/color_field.dart';
-import 'package:flutter_cms/models/fields/datetime_field.dart';
-import 'package:flutter_cms/models/fields/dropdown_field.dart';
-import 'package:flutter_cms/models/fields/image_field.dart';
-import 'package:flutter_cms/models/fields/number_field.dart';
-import 'package:flutter_cms/models/fields/string_field.dart';
-import 'package:flutter_cms/models/fields/text_field.dart';
-import 'package:flutter_cms/models/fields/url_field.dart';
-import 'package:flutter_cms/studio/cms_config.dart';
-import 'package:flutter_cms/studio/serializable.dart';
+import 'package:flutter_cms/annotations.dart';
+import 'package:flutter_cms/studio.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:super_editor/super_editor.dart';
 
 part 'home_screen_config.cms.g.dart';
 part 'home_screen_config.mapper.dart';
@@ -61,11 +53,9 @@ class HomeScreenConfig extends CmsConfigToDocument<HomeScreenConfig>
   // Content Configuration
   @CmsArrayFieldConfig<String>(
     description: 'List of features to highlight on the home screen',
-    option: CmsArrayOption(),
+    option: FeaturedItemsArrayOption(),
   )
   final List<String> featuredItems;
-  static Widget featuredItemsItemBuilder(BuildContext context, String item) =>
-      Text(item);
 
   @CmsNumberFieldConfig(
     description: 'Maximum number of items to display in featured section',
@@ -107,16 +97,7 @@ class HomeScreenConfig extends CmsConfigToDocument<HomeScreenConfig>
   // Layout Configuration
   @CmsDropdownFieldConfig<String>(
     description: 'Layout style for the content area',
-    option: CmsDropdownOption<String>(
-      options: [
-        DropdownOption(value: 'grid', label: 'Grid Layout'),
-        DropdownOption(value: 'list', label: 'List Layout'),
-        DropdownOption(value: 'carousel', label: 'Carousel Layout'),
-        DropdownOption(value: 'masonry', label: 'Masonry Layout'),
-      ],
-      defaultValue: 'grid',
-      placeholder: 'Select layout style...',
-    ),
+    option: LayoutStyleDropdownOption(),
   )
   final String layoutStyle;
 
@@ -194,5 +175,183 @@ class ColorMapper extends SimpleMapper<Color> {
   @override
   Object? encode(Color self) {
     return '#${self.toARGB32().toRadixString(16).substring(2).toUpperCase()}';
+  }
+}
+
+class LayoutStyleDropdownOption extends CmsDropdownOption<String> {
+  const LayoutStyleDropdownOption({super.hidden});
+
+  @override
+  bool get allowNull => false;
+
+  @override
+  FutureOr<String?>? get defaultValue async {
+    return (await options).firstOrNull?.value;
+  }
+
+  @override
+  FutureOr<List<DropdownOption<String>>> get options => Future.value([
+    DropdownOption(value: 'grid', label: 'Grid Layout'),
+    DropdownOption(value: 'list', label: 'List Layout'),
+    DropdownOption(value: 'masonry', label: 'Masonry Layout'),
+  ]);
+
+  @override
+  String? get placeholder => 'Select a layout style';
+}
+
+class FeaturedItemsArrayOption extends CmsArrayOption {
+  const FeaturedItemsArrayOption({super.hidden});
+
+  @override
+  CmsArrayFieldItemBuilder get itemBuilder =>
+      (BuildContext context, dynamic value) {
+        return ListTile(title: Text(value as String));
+      };
+
+  @override
+  CmsArrayFieldItemEditor get itemEditor =>
+      (
+        BuildContext context,
+        dynamic value,
+        Widget saveButton,
+        ValueChanged<dynamic>? onChanged,
+      ) {
+        return FeaturedItemEditor(
+          initialValue: value as String? ?? '',
+          onChanged: onChanged,
+          saveButton: saveButton,
+        );
+      };
+}
+
+class FeaturedItemEditor extends StatefulWidget {
+  final String initialValue;
+  final ValueChanged<dynamic>? onChanged;
+  final Widget saveButton;
+
+  const FeaturedItemEditor({
+    super.key,
+    required this.initialValue,
+    this.onChanged,
+    required this.saveButton,
+  });
+
+  @override
+  State<FeaturedItemEditor> createState() => _FeaturedItemEditorState();
+}
+
+class _FeaturedItemEditorState extends State<FeaturedItemEditor> {
+  late final AttributedTextEditingController _textController;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _textController = AttributedTextEditingController(
+      text: AttributedText(widget.initialValue),
+    );
+
+    _textController.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    final text = _textController.text.toPlainText();
+    widget.onChanged?.call(text);
+  }
+
+  @override
+  void dispose() {
+    _textController.removeListener(_onTextChanged);
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      constraints: const BoxConstraints(minWidth: 400, maxWidth: 500),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.edit, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Edit Featured Item',
+                style: theme.textTheme.h4.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Item Title',
+            style: theme.textTheme.small.copyWith(
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.foreground,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: theme.colorScheme.border),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: SuperTextField(
+              textController: _textController,
+              focusNode: _focusNode,
+              minLines: 1,
+              maxLines: 3,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              hintBehavior: HintBehavior.displayHintUntilTextEntered,
+              hintBuilder: (context) => Text(
+                'Enter featured item title...',
+                style: theme.textTheme.small.copyWith(
+                  color: theme.colorScheme.mutedForeground,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This item will appear in the featured section of the home screen.',
+            style: theme.textTheme.muted.copyWith(
+              color: theme.colorScheme.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ShadButton.ghost(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              const SizedBox(width: 8),
+              widget.saveButton,
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

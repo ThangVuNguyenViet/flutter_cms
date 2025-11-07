@@ -26,6 +26,7 @@ dependencies:
   flutter_resizable_container: ^4.2.0
   super_editor:
     path: ../super_editor/super_editor
+  analyzer: ^8.4.1
 
 dev_dependencies:
   flutter_test:

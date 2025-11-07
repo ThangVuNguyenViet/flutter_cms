@@ -98,9 +98,7 @@ class HomeScreen extends StatelessWidget {
 
         // Dark Overlay
         if (config.enableDarkOverlay)
-          Container(
-            color: Colors.black.withValues(alpha: 0.5),
-          ),
+          Container(color: Colors.black.withValues(alpha: 0.5)),
 
         // Hero Content
         Padding(
@@ -167,11 +165,7 @@ class HomeScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.campaign,
-            color: config.primaryColor,
-            size: 24,
-          ),
+          Icon(Icons.campaign, color: config.primaryColor, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -346,10 +340,7 @@ class HomeScreen extends StatelessWidget {
           Expanded(
             child: Text(
               item,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -377,10 +368,7 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.play_arrow),
             label: Text(
               config.primaryButtonLabel,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -395,10 +383,7 @@ class HomeScreen extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.transparent,
               foregroundColor: config.primaryColor,
-              side: BorderSide(
-                color: config.primaryColor,
-                width: 2,
-              ),
+              side: BorderSide(color: config.primaryColor, width: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -406,10 +391,7 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.info_outline),
             label: Text(
               config.secondaryButtonLabel,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -423,21 +405,14 @@ class HomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.info_outline,
-                color: config.primaryColor,
-                size: 20,
-              ),
+              Icon(Icons.info_outline, color: config.primaryColor, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Additional Information',
@@ -453,7 +428,9 @@ class HomeScreen extends StatelessWidget {
 
           _buildInfoRow(
             'Last Updated',
-            DateFormat('EEEE, MMMM dd, yyyy \'at\' h:mm a').format(config.lastUpdated),
+            DateFormat(
+              'EEEE, MMMM dd, yyyy \'at\' h:mm a',
+            ).format(config.lastUpdated),
             Icons.schedule,
           ),
 
@@ -485,14 +462,15 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, IconData icon, {bool isLink = false}) {
+  Widget _buildInfoRow(
+    String label,
+    String value,
+    IconData icon, {
+    bool isLink = false,
+  }) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: Colors.grey[600],
-        ),
+        Icon(icon, size: 16, color: Colors.grey[600]),
         const SizedBox(width: 8),
         Text(
           '$label: ',
@@ -516,5 +494,4 @@ class HomeScreen extends StatelessWidget {
       ],
     );
   }
-
 }

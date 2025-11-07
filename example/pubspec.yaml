@@ -38,6 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   dart_mappable: ^4.6.1
   intl: ^0.20.2
+  shadcn_ui: ^0.28.7
 
 dev_dependencies:
   flutter_test:
@@ -97,3 +98,5 @@ dependency_overrides:
   test_api: 0.7.6
   attributed_text:
     path: ../../super_editor/attributed_text
+  super_editor:
+    path: ../../super_editor/super_editor

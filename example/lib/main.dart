@@ -1,9 +1,6 @@
 import 'package:example/configs/home_screen_config.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cms/studio/cms_document_type_decoration.dart';
-import 'package:flutter_cms/studio/cms_document_type_sidebar.dart';
-import 'package:flutter_cms/studio/cms_studio.dart';
-import 'package:flutter_cms/studio/default_cms_header.dart';
+import 'package:flutter_cms/studio.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 void main() {

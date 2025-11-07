@@ -12,7 +12,7 @@ final homeScreenConfigFields = [
   CmsStringField(
     name: 'heroTitle',
     title: 'Hero Title',
-    option: const CmsStringOption(),
+    option: CmsStringOption(),
   ),
   CmsTextField(
     name: 'heroSubtitle',
@@ -27,19 +27,17 @@ final homeScreenConfigFields = [
   CmsBooleanField(
     name: 'enableDarkOverlay',
     title: 'Enable Dark Overlay',
-    option: const CmsBooleanOption(),
+    option: CmsBooleanOption(),
   ),
   CmsColorField(
     name: 'primaryColor',
     title: 'Primary Color',
-    option: const CmsColorOption(showAlpha: false),
+    option: CmsColorOption(),
   ),
   CmsArrayField(
     name: 'featuredItems',
     title: 'Featured Items',
-    option: const CmsArrayOption(),
-    itemBuilder: (context, value) =>
-        HomeScreenConfig.featuredItemsItemBuilder(context, value as String),
+    option: FeaturedItemsArrayOption(),
   ),
   CmsNumberField(
     name: 'maxFeaturedItems',
@@ -49,41 +47,32 @@ final homeScreenConfigFields = [
   CmsDateTimeField(
     name: 'lastUpdated',
     title: 'Last Updated',
-    option: const CmsDateTimeOption(),
+    option: CmsDateTimeOption(),
   ),
   CmsUrlField(
     name: 'externalLink',
     title: 'External Link',
-    option: const CmsUrlOption(),
+    option: CmsUrlOption(),
   ),
   CmsBooleanField(
     name: 'showPromotionalBanner',
     title: 'Show Promotional Banner',
-    option: const CmsBooleanOption(),
+    option: CmsBooleanOption(),
   ),
   CmsStringField(
     name: 'primaryButtonLabel',
     title: 'Primary Button Label',
-    option: const CmsStringOption(),
+    option: CmsStringOption(),
   ),
   CmsStringField(
     name: 'secondaryButtonLabel',
     title: 'Secondary Button Label',
-    option: const CmsStringOption(),
+    option: CmsStringOption(),
   ),
   CmsDropdownField<String>(
     name: 'layoutStyle',
     title: 'Layout Style',
-    option: CmsDropdownOption<String>(
-      options: [
-        DropdownOption(value: 'grid', label: 'Grid Layout'),
-        DropdownOption(value: 'list', label: 'List Layout'),
-        DropdownOption(value: 'carousel', label: 'Carousel Layout'),
-        DropdownOption(value: 'masonry', label: 'Masonry Layout'),
-      ],
-      defaultValue: 'grid',
-      placeholder: 'Select layout style...',
-    ),
+    option: LayoutStyleDropdownOption(),
   ),
   CmsNumberField(
     name: 'contentPadding',
