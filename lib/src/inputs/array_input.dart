@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
-import '../core/cms_data.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../core/cms_data.dart';
 import '../fields/complex/array_field.dart';
+import 'edit_styles/edit_styles.dart';
 
 class CmsArrayInput extends StatefulWidget {
   final CmsArrayField field;
   final CmsData? data;
   final ValueChanged<List?>? onChanged;
+  final EditStyles editStyle;
 
   const CmsArrayInput({
     super.key,
     required this.field,
     this.data,
     this.onChanged,
+    this.editStyle = const InlineEditStyles(),
   });
 
   @override
@@ -22,6 +25,8 @@ class CmsArrayInput extends StatefulWidget {
 
 class _CmsArrayInputState extends State<CmsArrayInput> {
   late List _items;
+  int? _editingIndex; // -1 for adding new, null for none, >= 0 for editing
+  dynamic _editingValue;
 
   @override
   void initState() {
@@ -30,7 +35,49 @@ class _CmsArrayInputState extends State<CmsArrayInput> {
   }
 
   void _addItem() {
+    if (widget.editStyle is InlineEditStyles) {
+      // Show inline editor for new item
+      setState(() {
+        _editingIndex = -1;
+        _editingValue = null;
+      });
+    } else {
+      // For modal style, handle later
+      widget.onChanged?.call(_items);
+    }
+  }
+
+  void _startEditing(int index) {
+    if (widget.editStyle is InlineEditStyles) {
+      setState(() {
+        _editingIndex = index;
+        _editingValue = _items[index];
+      });
+    }
+  }
+
+  void _saveItem() {
+    setState(() {
+      if (_editingIndex == -1) {
+        // Adding new item
+        if (_editingValue != null) {
+          _items.add(_editingValue);
+        }
+      } else if (_editingIndex != null && _editingIndex! >= 0) {
+        // Updating existing item
+        _items[_editingIndex!] = _editingValue;
+      }
+      _editingIndex = null;
+      _editingValue = null;
+    });
     widget.onChanged?.call(_items);
+  }
+
+  void _cancelEditing() {
+    setState(() {
+      _editingIndex = null;
+      _editingValue = null;
+    });
   }
 
   void _removeItem(int index) {
@@ -59,84 +106,150 @@ class _CmsArrayInputState extends State<CmsArrayInput> {
 
     final theme = ShadTheme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.border),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      children: [
+        ShadCard(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.field.title,
-                style: theme.textTheme.large.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.field.title,
+                    style: theme.textTheme.large.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  ShadButton(
+                    size: ShadButtonSize.sm,
+                    onPressed: _addItem,
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add, size: 16),
+                        SizedBox(width: 4),
+                        Text('Add'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              ShadButton(
-                size: ShadButtonSize.sm,
-                onPressed: _addItem,
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add, size: 16),
-                    SizedBox(width: 4),
-                    Text('Add'),
-                  ],
+              const SizedBox(height: 16),
+              // Show empty state or list
+              if (_items.isEmpty && _editingIndex != -1)
+                Center(
+                  child: Text(
+                    'No items. Click "Add" to create one.',
+                    style: theme.textTheme.small.copyWith(
+                      color: theme.colorScheme.mutedForeground,
+                    ),
+                  ),
+                )
+              else if (_items.isNotEmpty)
+                ReorderableListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _items.length,
+                  onReorder: _onReorder,
+                  itemBuilder: (context, index) {
+                    final isEditing = _editingIndex == index;
+
+                    return Padding(
+                      key: ValueKey('item_$index'),
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child:
+                          isEditing && widget.editStyle is InlineEditStyles
+                              ? _buildInlineEditor(context, theme, isNew: false)
+                              : _buildItemRow(context, theme, index),
+                    );
+                  },
                 ),
-              ),
+
+              // Inline editor for adding new item
             ],
           ),
-          const SizedBox(height: 16),
-          if (_items.isEmpty)
-            Center(
-              child: Text(
-                'No items. Click "Add" to create one.',
-                style: theme.textTheme.small.copyWith(
-                  color: theme.colorScheme.mutedForeground,
+        ),
+        SizedBox(height: 8),
+        if (widget.editStyle is InlineEditStyles && _editingIndex == -1)
+          ShadCard(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildInlineEditor(context, theme, isNew: true),
+                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ShadButton(
+                      onPressed: _saveItem,
+                      size: ShadButtonSize.sm,
+                      child: const Text('Save'),
+                    ),
+                    const SizedBox(width: 8),
+                    ShadButton.outline(
+                      onPressed: _cancelEditing,
+                      child: const Text('Cancel'),
+                    ),
+                  ],
                 ),
-              ),
-            )
-          else
-            ReorderableListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _items.length,
-              onReorder: _onReorder,
-              itemBuilder: (context, index) {
-                return Padding(
-                  key: ValueKey('item_$index'),
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.drag_handle,
-                        size: 18,
-                        color: theme.colorScheme.mutedForeground,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: widget.field.option.itemBuilder(
-                          context,
-                          _items[index],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ShadIconButton(
-                        icon: const Icon(Icons.delete, size: 18),
-                        onPressed: () => _removeItem(index),
-                      ),
-                    ],
-                  ),
-                );
-              },
+              ],
             ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildInlineEditor(
+    BuildContext context,
+    ShadThemeData theme, {
+    required bool isNew,
+  }) {
+    final editStyle = widget.editStyle;
+    if (editStyle is! InlineEditStyles) {
+      return const SizedBox.shrink();
+    }
+
+    return widget.field.option.itemEditor(context, _editingValue, (value) {
+      setState(() {
+        _editingValue = value;
+      });
+    });
+  }
+
+  Widget _buildItemRow(BuildContext context, ShadThemeData theme, int index) {
+    return Row(
+      children: [
+        if (_editingIndex == null)
+          ReorderableDragStartListener(
+            index: index,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.grab,
+              child: Icon(
+                Icons.drag_handle,
+                size: 18,
+                color: theme.colorScheme.mutedForeground,
+              ),
+            ),
+          ),
+        if (_editingIndex == null) const SizedBox(width: 8),
+        Expanded(
+          child: widget.field.option.itemBuilder(context, _items[index]),
+        ),
+        const SizedBox(width: 8),
+        if (_editingIndex == null && widget.editStyle is InlineEditStyles) ...[
+          ShadIconButton(
+            icon: const Icon(Icons.edit, size: 16),
+            onPressed: () => _startEditing(index),
+          ),
+          const SizedBox(width: 4),
         ],
-      ),
+        ShadIconButton(
+          icon: const Icon(Icons.delete, size: 18),
+          onPressed: _editingIndex == null ? () => _removeItem(index) : null,
+        ),
+      ],
     );
   }
 }

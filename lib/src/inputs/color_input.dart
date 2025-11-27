@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../core/cms_data.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../core/cms_data.dart';
 import '../fields/media/color_field.dart';
 
 /// Color picker input widget with full functionality
@@ -288,6 +288,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
           child: const Text('Cancel'),
         ),
         ShadButton(
+          size: ShadButtonSize.sm,
           onPressed: () {
             widget.onColorSelected(_hsvColor.toColor());
             Navigator.of(context).pop();

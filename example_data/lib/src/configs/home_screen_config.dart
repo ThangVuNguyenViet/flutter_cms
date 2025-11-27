@@ -1,12 +1,11 @@
 import 'dart:async';
 
 import 'package:dart_mappable/dart_mappable.dart';
-import 'package:example/screens/homes_creen.dart';
+import 'package:example_app/screens/homes_creen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cms/annotations.dart';
 import 'package:flutter_cms/studio.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:super_editor/super_editor.dart';
 
 part 'home_screen_config.cms.g.dart';
 part 'home_screen_config.mapper.dart';
@@ -17,8 +16,8 @@ part 'home_screen_config.mapper.dart';
       'Configuration for the mobile app home screen with hero section, features, and actions',
 )
 @MappableClass(ignoreNull: false, includeCustomMappers: [ColorMapper()])
-class HomeScreenConfig extends CmsConfigToDocument<HomeScreenConfig>
-    with HomeScreenConfigMappable {
+class HomeScreenConfig
+    with HomeScreenConfigMappable, CmsConfigToDocument<HomeScreenConfig> {
   // Hero Section
   @CmsStringFieldConfig(
     description: 'Title text displayed prominently in the hero section',
@@ -124,12 +123,11 @@ class HomeScreenConfig extends CmsConfigToDocument<HomeScreenConfig>
     required this.contentPadding,
   });
 
-  factory HomeScreenConfig.defaultValue() => HomeScreenConfig(
+  static HomeScreenConfig defaultValue = HomeScreenConfig(
     heroTitle: 'Welcome to Our App',
     heroSubtitle:
         'Discover amazing features and capabilities that will enhance your daily workflow and productivity.',
-    backgroundImageUrl:
-        'https://images.unsplash.com/photo-1557804506-669a67965ba0',
+    backgroundImageUrl: '',
     enableDarkOverlay: true,
     primaryColor: Colors.deepPurple,
     featuredItems: [
@@ -148,12 +146,37 @@ class HomeScreenConfig extends CmsConfigToDocument<HomeScreenConfig>
     layoutStyle: 'grid',
     contentPadding: 16.0,
   );
-}
 
-Widget $homeScreenConfigBuilder(Map<String, dynamic> config) {
-  final homeScreenConfig = HomeScreenConfigMapper.fromMap(config);
+  static Widget configBuilder(Map<String, dynamic> config) {
+    final homeScreenConfig = HomeScreenConfigMapper.fromMap(config);
 
-  return HomeScreen(config: homeScreenConfig);
+    return HomeScreen(config: homeScreenConfig);
+  }
+
+  static Widget tileBuilder(Map<String, dynamic> config) {
+    final homeScreenConfig = HomeScreenConfigMapper.fromMap(config);
+
+    return Builder(
+      builder: (context) {
+        return ShadCard(
+          title: Text(
+            homeScreenConfig.heroTitle,
+            style: ShadTheme.of(context).textTheme.h4,
+          ),
+          description: Text(
+            homeScreenConfig.heroSubtitle,
+            style: ShadTheme.of(context).textTheme.muted,
+            maxLines: 1,
+          ),
+          leading: Icon(
+            Icons.home,
+            size: 32,
+            color: ShadTheme.of(context).colorScheme.primary,
+          ),
+        );
+      },
+    );
+  }
 }
 
 class ColorMapper extends SimpleMapper<Color> {
@@ -206,21 +229,15 @@ class FeaturedItemsArrayOption extends CmsArrayOption {
   @override
   CmsArrayFieldItemBuilder get itemBuilder =>
       (BuildContext context, dynamic value) {
-        return ListTile(title: Text(value as String));
+        return Text(value as String);
       };
 
   @override
   CmsArrayFieldItemEditor get itemEditor =>
-      (
-        BuildContext context,
-        dynamic value,
-        Widget saveButton,
-        ValueChanged<dynamic>? onChanged,
-      ) {
+      (BuildContext context, dynamic value, ValueChanged<dynamic>? onChanged) {
         return FeaturedItemEditor(
           initialValue: value as String? ?? '',
           onChanged: onChanged,
-          saveButton: saveButton,
         );
       };
 }
@@ -228,13 +245,11 @@ class FeaturedItemsArrayOption extends CmsArrayOption {
 class FeaturedItemEditor extends StatefulWidget {
   final String initialValue;
   final ValueChanged<dynamic>? onChanged;
-  final Widget saveButton;
 
   const FeaturedItemEditor({
     super.key,
     required this.initialValue,
     this.onChanged,
-    required this.saveButton,
   });
 
   @override
@@ -242,116 +257,14 @@ class FeaturedItemEditor extends StatefulWidget {
 }
 
 class _FeaturedItemEditorState extends State<FeaturedItemEditor> {
-  late final AttributedTextEditingController _textController;
-  late final FocusNode _focusNode;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode = FocusNode();
-    _textController = AttributedTextEditingController(
-      text: AttributedText(widget.initialValue),
-    );
-
-    _textController.addListener(_onTextChanged);
-  }
-
-  void _onTextChanged() {
-    final text = _textController.text.toPlainText();
-    widget.onChanged?.call(text);
-  }
-
-  @override
-  void dispose() {
-    _textController.removeListener(_onTextChanged);
-    _textController.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      constraints: const BoxConstraints(minWidth: 400, maxWidth: 500),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.edit, size: 20, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Edit Featured Item',
-                style: theme.textTheme.h4.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Item Title',
-            style: theme.textTheme.small.copyWith(
-              fontWeight: FontWeight.w500,
-              color: theme.colorScheme.foreground,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: theme.colorScheme.border),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: SuperTextField(
-              textController: _textController,
-              focusNode: _focusNode,
-              minLines: 1,
-              maxLines: 3,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              hintBehavior: HintBehavior.displayHintUntilTextEntered,
-              hintBuilder: (context) => Text(
-                'Enter featured item title...',
-                style: theme.textTheme.small.copyWith(
-                  color: theme.colorScheme.mutedForeground,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'This item will appear in the featured section of the home screen.',
-            style: theme.textTheme.muted.copyWith(
-              color: theme.colorScheme.mutedForeground,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              ShadButton.ghost(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              const SizedBox(width: 8),
-              widget.saveButton,
-            ],
-          ),
-        ],
-      ),
+    return ShadInputFormField(
+      minLines: 1,
+      maxLines: 3,
+      onChanged: widget.onChanged,
+      label: Text('Item Title', style: ShadTheme.of(context).textTheme.list),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     );
   }
 }

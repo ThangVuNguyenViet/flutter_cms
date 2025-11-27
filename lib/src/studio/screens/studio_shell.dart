@@ -3,9 +3,9 @@ import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_solidart/flutter_solidart.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../core/signals/cms_signals.dart';
 import 'document_editor.dart';
 import 'document_list.dart';
-import '../core/signals/cms_signals.dart';
 
 class CmsStudio extends StatefulWidget {
   final Widget header;
@@ -24,8 +24,8 @@ class _CmsStudioState extends State<CmsStudio> {
     return Container(
       decoration: BoxDecoration(color: theme.colorScheme.background),
       child: SignalBuilder(
-        signal: selectedDocumentSignal,
-        builder: (context, selectedDocument, child) {
+        builder: (context, child) {
+          final selectedDocument = selectedDocumentSignal.value;
           if (selectedDocument == null) {
             return _buildEmptyState(
               icon: Icons.edit,
@@ -36,14 +36,11 @@ class _CmsStudioState extends State<CmsStudio> {
           }
 
           // Build document editor with padding for better spacing
-          return Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: CmsDocumentEditor(
-              fields: selectedDocument.fields,
-              title: selectedDocument.title,
-              description: selectedDocument.description,
-              documentId: 'new', // TODO: Handle document IDs properly
-            ),
+          return CmsDocumentEditor(
+            fields: selectedDocument.fields,
+            title: selectedDocument.title,
+            description: selectedDocument.description,
+            documentId: 'new', // TODO: Handle document IDs properly
           );
         },
       ),
@@ -59,8 +56,8 @@ class _CmsStudioState extends State<CmsStudio> {
         border: Border(left: BorderSide(color: theme.colorScheme.border)),
       ),
       child: SignalBuilder(
-        signal: selectedDocumentSignal,
-        builder: (context, selectedDocument, child) {
+        builder: (context, child) {
+          final selectedDocument = selectedDocumentSignal.value;
           if (selectedDocument == null) {
             return _buildEmptyState(
               icon: Icons.visibility,
@@ -72,8 +69,8 @@ class _CmsStudioState extends State<CmsStudio> {
 
           // Use the builder (now required)
           return SignalBuilder(
-            signal: documentDataSignal,
-            builder: (context, documentData, child) {
+            builder: (context, child) {
+              final documentData = documentDataSignal.value;
               if (documentData.isEmpty) {
                 return _buildEmptyState(
                   icon: Icons.article,
@@ -105,8 +102,9 @@ class _CmsStudioState extends State<CmsStudio> {
         border: Border(right: BorderSide(color: theme.colorScheme.border)),
       ),
       child: SignalBuilder(
-        signal: selectedDocumentSignal,
-        builder: (context, selectedDocument, child) {
+        builder: (context, child) {
+          final selectedDocument = selectedDocumentSignal.value;
+
           if (selectedDocument == null) {
             return _buildEmptyState(
               icon: Icons.folder_open,
@@ -118,8 +116,7 @@ class _CmsStudioState extends State<CmsStudio> {
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: CmsDocumentListView(
-              title: selectedDocument.title,
-              description: selectedDocument.description,
+              selectedDocument: selectedDocument,
               icon: Icons.description,
               onCreateNew: () {
                 selectedDocumentSignal.createNewDocument();
@@ -137,7 +134,7 @@ class _CmsStudioState extends State<CmsStudio> {
                               ? documents.first
                               : throw StateError('No documents found'),
                 );
-                selectedDocumentSignal.loadDocument(document);
+                documentDataSignal.value = document;
               },
             ),
           );
@@ -248,25 +245,25 @@ class _CmsStudioState extends State<CmsStudio> {
           children: [
             // Sidebar (fixed, non-resizable)
             ResizableChild(
-              size: ResizableSize.pixels(250),
+              size: ResizableSize.ratio(0.2),
               child: _buildSidebar(),
             ),
 
             // Documents list panel (resizable)
             ResizableChild(
-              size: ResizableSize.pixels(300),
+              size: ResizableSize.ratio(0.2),
               child: _buildDocumentsList(),
             ),
 
             // Content preview panel (resizable)
             ResizableChild(
-              size: ResizableSize.expand(flex: 1),
+              size: ResizableSize.ratio(0.4),
               child: _buildContentPreview(),
             ),
 
             // Document editor panel (resizable)
             ResizableChild(
-              size: ResizableSize.pixels(500),
+              size: ResizableSize.ratio(0.2),
               child: _buildEditor(),
             ),
           ],

@@ -1,6 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../../core/cms_data.dart';
+import '../../../fields/base/field.dart';
+import '../../../fields/complex/array_field.dart';
+import '../../../fields/complex/block_field.dart';
+import '../../../fields/complex/dropdown_field.dart';
+import '../../../fields/complex/geopoint_field.dart';
+import '../../../fields/complex/object_field.dart';
+import '../../../fields/complex/reference_field.dart';
+import '../../../fields/media/color_field.dart';
+import '../../../fields/media/file_field.dart';
+import '../../../fields/media/image_field.dart';
+import '../../../fields/primitive/boolean_field.dart';
+import '../../../fields/primitive/checkbox_field.dart';
+import '../../../fields/primitive/date_field.dart';
+import '../../../fields/primitive/datetime_field.dart';
+import '../../../fields/primitive/number_field.dart';
+import '../../../fields/primitive/slug_field.dart';
+import '../../../fields/primitive/string_field.dart';
+import '../../../fields/primitive/text_field.dart';
+import '../../../fields/primitive/url_field.dart';
 import '../../../inputs/array_input.dart';
 import '../../../inputs/block_input.dart';
 import '../../../inputs/boolean_input.dart';
@@ -19,26 +39,6 @@ import '../../../inputs/slug_input.dart';
 import '../../../inputs/string_input.dart';
 import '../../../inputs/text_input.dart';
 import '../../../inputs/url_input.dart';
-import '../../../core/cms_data.dart';
-import '../../../fields/base/field.dart';
-import '../../../fields/complex/array_field.dart';
-import '../../../fields/complex/block_field.dart';
-import '../../../fields/primitive/boolean_field.dart';
-import '../../../fields/primitive/checkbox_field.dart';
-import '../../../fields/media/color_field.dart';
-import '../../../fields/primitive/date_field.dart';
-import '../../../fields/primitive/datetime_field.dart';
-import '../../../fields/complex/dropdown_field.dart';
-import '../../../fields/media/file_field.dart';
-import '../../../fields/complex/geopoint_field.dart';
-import '../../../fields/media/image_field.dart';
-import '../../../fields/primitive/number_field.dart';
-import '../../../fields/complex/object_field.dart';
-import '../../../fields/complex/reference_field.dart';
-import '../../../fields/primitive/slug_field.dart';
-import '../../../fields/primitive/string_field.dart';
-import '../../../fields/primitive/text_field.dart';
-import '../../../fields/primitive/url_field.dart';
 import '../../core/signals/cms_signals.dart';
 
 /// Type definition for field value change callbacks
@@ -217,7 +217,7 @@ class CmsForm extends StatefulWidget {
 class _CmsFormState extends State<CmsForm> {
   void _handleFieldChange(String fieldName, dynamic value) {
     // Update the document signal field directly for real-time sync
-    documentDataSignal.updateField(fieldName, value);
+    documentDataSignal[fieldName] = value;
   }
 
   Widget _buildFieldInput(CmsField field) {
@@ -247,63 +247,57 @@ class _CmsFormState extends State<CmsForm> {
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Form header
-          if (widget.title != null || widget.description != null)
-            Column(
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (widget.title != null)
-                            Text(widget.title!, style: theme.textTheme.h2),
-                          if (widget.description != null)
-                            Text(
-                              widget.description!,
-                              style: theme.textTheme.small.copyWith(
-                                color: theme.colorScheme.mutedForeground,
-                              ),
-                            ),
-                        ],
-                      ),
+                if (widget.title != null)
+                  Text(widget.title!, style: theme.textTheme.h2),
+                if (widget.description != null)
+                  Text(
+                    widget.description!,
+                    style: theme.textTheme.small.copyWith(
+                      color: theme.colorScheme.mutedForeground,
                     ),
-                    Row(
-                      children: [
-                        if (widget.onDiscard != null)
-                          ShadButton.outline(
-                            onPressed: widget.onDiscard,
-                            child: const Text('Discard'),
-                          ),
-                        if (widget.onDiscard != null) const SizedBox(width: 8),
-                        if (widget.onSave != null)
-                          ShadButton(
-                            onPressed: widget.onSave,
-                            child: const Text('Save'),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
+                  ),
+                const SizedBox(height: 12),
+                // Dynamic form fields
+                ...widget.fields.map((field) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: _buildFieldInput(field),
+                  );
+                }),
               ],
             ),
-          // Dynamic form fields
-          ...widget.fields.map((field) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: _buildFieldInput(field),
-            );
-          }),
-        ],
-      ),
+          ),
+        ),
+        const Divider(height: 0),
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (widget.onDiscard != null)
+                ShadButton.outline(
+                  onPressed: widget.onDiscard,
+                  child: const Text('Discard'),
+                ),
+              if (widget.onDiscard != null) const SizedBox(width: 8),
+              if (widget.onSave != null)
+                ShadButton(
+                  onPressed: widget.onSave,
+                  size: ShadButtonSize.sm,
+                  child: const Text('Save'),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

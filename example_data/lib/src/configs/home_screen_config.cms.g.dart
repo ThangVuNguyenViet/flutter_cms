@@ -88,8 +88,9 @@ final homeScreenConfigDocumentType = CmsDocumentType<HomeScreenConfig>(
   description:
       'Configuration for the mobile app home screen with hero section, features, and actions',
   fields: homeScreenConfigFields,
-  builder: $homeScreenConfigBuilder,
-  createDefault: () => HomeScreenConfig.defaultValue(),
+  builder: HomeScreenConfig.configBuilder,
+  tileBuilder: HomeScreenConfig.tileBuilder,
+  defaultValue: HomeScreenConfig.defaultValue,
 );
 
 // **************************************************************************

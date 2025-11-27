@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../base/field.dart';
 
 abstract class CmsArrayOption extends CmsOption {
@@ -38,6 +39,5 @@ typedef CmsArrayFieldItemEditor =
     Widget Function(
       BuildContext context,
       dynamic value,
-      Widget saveButton,
       ValueChanged<dynamic>? onChanged,
     );

@@ -21,8 +21,8 @@ dependencies:
   file_picker: ^8.1.4
   shared_preferences: ^2.2.2
   connectivity_plus: ^6.0.0
-  solidart: ^1.5.4
-  flutter_solidart: ^1.5.4
+  solidart: ^2.8.2
+  flutter_solidart: ^2.7.1
   flutter_resizable_container: ^4.2.0
   super_editor:
     path: ../super_editor/super_editor

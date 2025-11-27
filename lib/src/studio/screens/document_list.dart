@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_solidart/flutter_solidart.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../core/signals/cms_signals.dart';
+import '../studio.dart';
 
 /// Document list view for browsing multiple documents of a type
 class CmsDocumentListView extends StatefulWidget {
-  final String title;
-  final String? description;
+  final CmsDocumentType selectedDocument;
   final IconData? icon;
   final String? filter;
   final VoidCallback? onCreateNew;
@@ -15,8 +14,7 @@ class CmsDocumentListView extends StatefulWidget {
 
   const CmsDocumentListView({
     super.key,
-    required this.title,
-    this.description,
+    required this.selectedDocument,
     this.icon,
     this.filter,
     this.onCreateNew,
@@ -61,35 +59,15 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
     }).toList();
   }
 
-  String _getDocumentTitle(Map<String, dynamic> docData) {
-    // Try to find a title field - common field names
-    for (final key in ['title', 'name', 'label', 'displayName']) {
-      if (docData.containsKey(key) && docData[key] is String) {
-        final title = docData[key] as String;
-        if (title.isNotEmpty) {
-          return title;
-        }
-      }
-    }
-
-    // Fallback to first string value or "Untitled"
-    for (final value in docData.values) {
-      if (value is String && value.isNotEmpty) {
-        return value.length > 30 ? '${value.substring(0, 30)}...' : value;
-      }
-    }
-
-    return 'Untitled Document';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
 
     return SignalBuilder(
-      signal: documentsListSignal,
-      builder: (context, documents, child) {
-        final filteredDocuments = _getFilteredDocuments(documents);
+      builder: (context, documents) {
+        final documents =
+            documentStorageSignal[selectedDocumentSignal.value?.name];
+        final filteredDocuments = _getFilteredDocuments(documents?.value ?? []);
 
         return Column(
           children: [
@@ -118,32 +96,22 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(widget.title, style: theme.textTheme.h2),
-                            if (widget.description != null)
-                              Text(
-                                widget.description!,
-                                style: theme.textTheme.small.copyWith(
-                                  color: theme.colorScheme.mutedForeground,
-                                ),
+                            Text(
+                              widget.selectedDocument.title,
+                              style: theme.textTheme.h2,
+                            ),
+                            Text(
+                              widget.selectedDocument.description,
+                              style: theme.textTheme.small.copyWith(
+                                color: theme.colorScheme.mutedForeground,
                               ),
-                          ],
-                        ),
-                      ),
-                      ShadButton(
-                        onPressed: _createNewDocument,
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add, size: 16),
-                            SizedBox(width: 8),
-                            Text('Create'),
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Search bar
                   ShadInputFormField(
                     placeholder: const Text('Search documents...'),
                     onChanged: (value) {
@@ -151,7 +119,9 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
                         _searchQuery = value;
                       });
                     },
+                    trailing: Icon(Icons.search),
                   ),
+                  // Search bar
                   if (widget.filter != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
@@ -196,72 +166,7 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
                         itemCount: filteredDocuments.length,
                         itemBuilder: (context, index) {
                           final doc = filteredDocuments[index];
-                          final docData = doc;
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () => _openDocument(doc),
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: theme.colorScheme.border,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      if (widget.icon != null) ...[
-                                        Icon(
-                                          widget.icon,
-                                          size: 20,
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                        const SizedBox(width: 12),
-                                      ],
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              _getDocumentTitle(docData),
-                                              style: theme.textTheme.small
-                                                  .copyWith(
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'Document #${index + 1}',
-                                              style: theme.textTheme.small
-                                                  .copyWith(
-                                                    color:
-                                                        theme
-                                                            .colorScheme
-                                                            .mutedForeground,
-                                                    fontSize: 12,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Icon(
-                                        Icons.chevron_right,
-                                        size: 20,
-                                        color:
-                                            theme.colorScheme.mutedForeground,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
+                          return widget.selectedDocument.tileBuilder(doc);
                         },
                       ),
             ),

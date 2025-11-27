@@ -49,13 +49,13 @@ class _CmsDocumentEditorState extends State<CmsDocumentEditor> {
     try {
       // Reset document to its original state by reloading it
       final selectedDoc = selectedDocumentSignal.value;
-      if (selectedDoc?.createDefault != null) {
+      if (selectedDoc?.defaultValue != null) {
         // Reset to default values
-        final defaultInstance = selectedDoc!.createDefault!();
-        documentDataSignal.updateData(defaultInstance.toMap());
+        final defaultInstance = selectedDoc!.defaultValue!;
+        documentDataSignal.value = defaultInstance.toMap();
       } else {
         // Clear document data
-        documentDataSignal.clearData();
+        documentDataSignal.clear();
       }
 
       if (mounted) {
@@ -75,8 +75,8 @@ class _CmsDocumentEditorState extends State<CmsDocumentEditor> {
   @override
   Widget build(BuildContext context) {
     return SignalBuilder(
-      signal: documentDataSignal,
-      builder: (context, documentData, child) {
+      builder: (context, child) {
+        final documentData = documentDataSignal.value;
         return CmsForm(
           fields: widget.fields,
           data: Map<String, dynamic>.from(documentData),

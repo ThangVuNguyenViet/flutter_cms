@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import '../core/cms_data.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../core/cms_data.dart';
 import '../fields/media/image_field.dart';
 
 @Preview(name: 'CmsImageInput')
@@ -73,12 +73,7 @@ class _CmsImageInputState extends State<CmsImageInput> {
 
   Future<void> _selectImage() async {
     try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
-      );
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
       if (image != null) {
         // Remove listener temporarily to avoid triggering onChange
@@ -97,35 +92,7 @@ class _CmsImageInputState extends State<CmsImageInput> {
           context,
         ).show(ShadToast(description: Text('Failed to pick image: $e')));
       }
-    }
-  }
-
-  Future<void> _takePhoto() async {
-    try {
-      final XFile? photo = await _picker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
-      );
-
-      if (photo != null) {
-        // Remove listener temporarily to avoid triggering onChange
-        _urlController.removeListener(_onUrlChanged);
-        setState(() {
-          _pickedImage = photo;
-          _imageUrl = photo.path;
-          _urlController.text = photo.path;
-        });
-        _urlController.addListener(_onUrlChanged);
-        widget.onChanged?.call(photo.path);
-      }
-    } catch (e) {
-      if (mounted) {
-        ShadToaster.of(
-          context,
-        ).show(ShadToast(description: Text('Failed to take photo: $e')));
-      }
+      rethrow;
     }
   }
 
@@ -139,38 +106,6 @@ class _CmsImageInputState extends State<CmsImageInput> {
     });
     _urlController.addListener(_onUrlChanged);
     widget.onChanged?.call(null);
-  }
-
-  void _showImageSourceDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select Image Source'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Gallery'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _selectImage();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Camera'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _takePhoto();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   Widget _buildImagePreview(ShadThemeData theme) {
@@ -278,7 +213,7 @@ class _CmsImageInputState extends State<CmsImageInput> {
             ),
             const SizedBox(width: 8),
             ShadButton.outline(
-              onPressed: _showImageSourceDialog,
+              onPressed: _selectImage,
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

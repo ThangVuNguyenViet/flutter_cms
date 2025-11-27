@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import '../core/cms_data.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../core/cms_data.dart';
 import '../fields/primitive/datetime_field.dart';
 
 @Preview(name: 'CmsDateTimeInput')
@@ -57,6 +57,7 @@ class _CmsDateTimeInputState extends State<CmsDateTimeInput> {
                 child: const Text('Cancel'),
               ),
               ShadButton(
+                size: ShadButtonSize.sm,
                 onPressed: () {
                   Navigator.pop(context, _selectedDateTime);
                 },

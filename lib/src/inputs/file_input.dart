@@ -1,9 +1,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import '../core/cms_data.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../core/cms_data.dart';
 import '../fields/media/file_field.dart';
 
 @Preview(name: 'CmsFileInput')
@@ -193,10 +193,15 @@ class _CmsFileInputState extends State<CmsFileInput> {
             ),
           ),
           const SizedBox(height: 8),
-          ShadButton(onPressed: _selectFile, child: const Text('Change File')),
+          ShadButton(
+            onPressed: _selectFile,
+            size: ShadButtonSize.sm,
+            child: const Text('Change File'),
+          ),
         ] else
           ShadButton(
             onPressed: _selectFile,
+            size: ShadButtonSize.sm,
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [

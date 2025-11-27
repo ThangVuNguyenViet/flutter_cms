@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_solidart/flutter_solidart.dart';
 
+import '../../core/signals/cms_signals.dart';
 import '../common/cms_document_type_decoration.dart';
 import '../common/cms_document_type_item.dart';
-import '../../core/signals/cms_signals.dart';
 
 /// A sidebar widget that displays a list of CmsDocumentTypeDecoration navigation items
 class CmsDocumentTypeSidebar extends StatefulWidget {
@@ -42,8 +42,8 @@ class _CmsDocumentTypeSidebarState extends State<CmsDocumentTypeSidebar> {
   @override
   Widget build(BuildContext context) {
     return SignalBuilder(
-      signal: selectedDocumentSignal,
-      builder: (context, selectedDocument, child) {
+      builder: (context, child) {
+        final selectedDocument = selectedDocumentSignal.value;
         return Column(
           children: [
             if (widget.header != null) widget.header!,

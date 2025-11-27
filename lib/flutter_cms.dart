@@ -27,14 +27,26 @@
 /// ```dart
 /// import 'package:flutter_cms/annotations.dart';
 /// ```
+library;
 
 // Core abstractions and data models
 export 'src/core/annotations.dart';
 export 'src/core/cms_data.dart';
-
+// Utilities
+export 'src/extensions/object_extensions.dart';
 // Field system
 export 'src/fields/base/field.dart';
-
+// Complex fields
+export 'src/fields/complex/array_field.dart';
+export 'src/fields/complex/block_field.dart';
+export 'src/fields/complex/dropdown_field.dart';
+export 'src/fields/complex/geopoint_field.dart';
+export 'src/fields/complex/object_field.dart';
+export 'src/fields/complex/reference_field.dart';
+// Media fields
+export 'src/fields/media/color_field.dart';
+export 'src/fields/media/file_field.dart';
+export 'src/fields/media/image_field.dart';
 // Primitive fields
 export 'src/fields/primitive/boolean_field.dart';
 export 'src/fields/primitive/checkbox_field.dart';
@@ -45,20 +57,6 @@ export 'src/fields/primitive/slug_field.dart';
 export 'src/fields/primitive/string_field.dart';
 export 'src/fields/primitive/text_field.dart';
 export 'src/fields/primitive/url_field.dart';
-
-// Complex fields
-export 'src/fields/complex/array_field.dart';
-export 'src/fields/complex/block_field.dart';
-export 'src/fields/complex/dropdown_field.dart';
-export 'src/fields/complex/geopoint_field.dart';
-export 'src/fields/complex/object_field.dart';
-export 'src/fields/complex/reference_field.dart';
-
-// Media fields
-export 'src/fields/media/color_field.dart';
-export 'src/fields/media/file_field.dart';
-export 'src/fields/media/image_field.dart';
-
 // Input widgets (hide preview functions to avoid naming conflicts)
 export 'src/inputs/array_input.dart';
 export 'src/inputs/block_input.dart' hide preview;
@@ -78,7 +76,4 @@ export 'src/inputs/slug_input.dart' hide preview;
 export 'src/inputs/string_input.dart' hide preview;
 export 'src/inputs/text_input.dart' hide preview;
 export 'src/inputs/url_input.dart' hide preview;
-
-// Utilities
-export 'src/extensions/object_extensions.dart';
 export 'src/validators/validators.dart';

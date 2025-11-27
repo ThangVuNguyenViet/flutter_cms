@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
+import 'package:source_gen/source_gen.dart';
+
 import '../core/annotations.dart';
 import 'utils.dart';
-import 'package:source_gen/source_gen.dart';
 
 /// Extension to provide safe field access similar to widgetbook's readOrNull pattern
 extension DartObjectExtension on DartObject {
@@ -348,9 +349,6 @@ class CmsFieldGenerator extends GeneratorForAnnotation<CmsConfig> {
             ? "name: '$id',"
             : "name: '${className.substring(0, 1).toLowerCase()}${className.substring(1)}',";
 
-    final builderName =
-        '\$${className.substring(0, 1).toLowerCase()}${className.substring(1)}Builder';
-
     return '''
 /// Generated CmsField list for $className
 final $fieldsListName = [
@@ -363,8 +361,9 @@ final $documentTypeName = CmsDocumentType<$className>(
   title: '$title',
   description: '$description',
   fields: $fieldsListName,
-  builder: $builderName,
-  createDefault: () => $className.defaultValue(),
+  builder: $className.configBuilder,
+  tileBuilder: $className.tileBuilder,
+  defaultValue: $className.defaultValue,
 );\n''';
   }
 

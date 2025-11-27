@@ -24,13 +24,9 @@
 ///   }
 /// }
 /// ```
+library;
 
-// Core studio functionality
-export 'core/config.dart';
-export 'core/registry.dart';
-export 'core/serializable.dart';
-export 'core/signals/cms_signals.dart';
-
+export '../core/serializable.dart';
 // UI Components
 export 'components/common/cms_document_type_decoration.dart';
 export 'components/common/cms_document_type_item.dart';
@@ -38,11 +34,13 @@ export 'components/common/default_cms_header.dart';
 export 'components/forms/cms_form.dart';
 export 'components/layout/three_pane_layout.dart';
 export 'components/navigation/cms_document_type_sidebar.dart';
-
+// Core studio functionality
+export 'core/config.dart';
+export 'core/registry.dart';
+export 'core/signals/cms_signals.dart';
 // Main screens
 export 'screens/document_editor.dart';
 export 'screens/document_list.dart';
 export 'screens/studio_shell.dart';
-
 // Theme
 export 'theme/theme.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../annotations.dart';
-import 'serializable.dart';
+import '../../core/serializable.dart';
 
 /// Represents a document type (schema) in the CMS
 class CmsDocumentType<T extends CmsConfigToDocument<dynamic>> {
@@ -20,8 +20,11 @@ class CmsDocumentType<T extends CmsConfigToDocument<dynamic>> {
   /// Required builder function to create a widget from the config data
   final Widget Function(Map<String, dynamic> data) builder;
 
+  /// Tile builder function for displaying a summary tile
+  final Widget Function(Map<String, dynamic> data) tileBuilder;
+
   /// Function to create a default instance of T
-  final T Function()? createDefault;
+  final T? defaultValue;
 
   const CmsDocumentType({
     required this.name,
@@ -29,6 +32,7 @@ class CmsDocumentType<T extends CmsConfigToDocument<dynamic>> {
     required this.description,
     required this.fields,
     required this.builder,
-    this.createDefault,
+    required this.tileBuilder,
+    this.defaultValue,
   });
 }
