@@ -3,8 +3,6 @@ targets:
     builders:
       flutter_cms|cmsBuilder:
         enabled: true
-        generate_for:
-          - example/lib/configs/home_screen_config.dart
 
 builders:
   cmsBuilder:

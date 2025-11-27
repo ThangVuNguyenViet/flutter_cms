@@ -1,4 +1,4 @@
-name: example_data
+name: data_models
 description: A starting point for Dart libraries or applications.
 version: 1.0.0
 # repository: https://github.com/my_org/my_repo
@@ -8,10 +8,10 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  example_app: 
+  example_app:
     path: ../example_app
   flutter_cms:
-    path: ../
+    path: ../../
 
 dev_dependencies:
   lints: ^6.0.0
