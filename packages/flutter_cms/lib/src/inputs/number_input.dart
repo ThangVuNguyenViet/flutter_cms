@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widget_previews.dart';
-import '../core/cms_data.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-
-import '../fields/primitive/number_field.dart';
 
 @Preview(name: 'CmsNumberInput')
 Widget preview() => ShadApp(

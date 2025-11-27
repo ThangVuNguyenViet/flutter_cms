@@ -241,6 +241,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.6.1"
+  dart_quill_delta:
+    dependency: transitive
+    description:
+      name: dart_quill_delta
+      sha256: "6aa89f0903ca3e70f5ceeb1d75d722f6ca583e87a2a8893c7b9f42f7a947f6e5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.6.0"
   dart_style:
     dependency: transitive
     description:
@@ -249,6 +257,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  data_models:
+    dependency: "direct main"
+    description:
+      path: "../data_models"
+      relative: true
+    source: path
+    version: "1.0.0"
   dbus:
     dependency: transitive
     description:
@@ -265,6 +280,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.4"
+  diff_match_patch:
+    dependency: transitive
+    description:
+      name: diff_match_patch
+      sha256: "2efc9e6e8f449d0abe15be240e2c2a3bcd977c8d126cfd70598aee60af35c0a4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.1"
   equatable:
     dependency: transitive
     description:
@@ -280,13 +303,6 @@ packages:
       relative: true
     source: path
     version: "1.0.0+1"
-  example_data:
-    dependency: "direct main"
-    description:
-      path: "../data_models"
-      relative: true
-    source: path
-    version: "1.0.0"
   extended_image:
     dependency: transitive
     description:
@@ -391,7 +407,14 @@ packages:
   flutter_cms:
     dependency: "direct main"
     description:
-      path: "../.."
+      path: "../../packages/flutter_cms"
+      relative: true
+    source: path
+    version: "0.1.0"
+  flutter_cms_annotation:
+    dependency: transitive
+    description:
+      path: "../../packages/flutter_cms_annotation"
       relative: true
     source: path
     version: "0.1.0"
@@ -478,10 +501,10 @@ packages:
     dependency: transitive
     description:
       name: follow_the_leader
-      sha256: "798baf5211ca2461c8462d4c8e94f57bf989758f8204056d607eb9a20f1cf794"
+      sha256: "2e4c4ebe6b3f1942b2385904b118ba8ba117fae0b30c8c453be0b64a271dd07a"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.4+8"
+    version: "0.5.2"
   form_builder_validators:
     dependency: transitive
     description:
@@ -698,6 +721,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.1"
+  markdown:
+    dependency: transitive
+    description:
+      name: markdown
+      sha256: "935e23e1ff3bc02d390bad4d4be001208ee92cc217cb5b5a6c19bc14aaa318c1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.3.0"
   matcher:
     dependency: transitive
     description:
@@ -750,10 +781,10 @@ packages:
     dependency: transitive
     description:
       name: overlord
-      sha256: "576256bc9ce3fb0ae3042bbb26eed67bdb26a5045dd7e3c851aae65b0bbab2f5"
+      sha256: "532f5685ac09ee805d97ce89794a4eeda41672c32955b4a835bdfce93e720a05"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.3+5"
+    version: "0.4.2"
   package_config:
     dependency: transitive
     description:
@@ -874,6 +905,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
+  quiver:
+    dependency: transitive
+    description:
+      name: quiver
+      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.2"
   rational:
     dependency: transitive
     description:
@@ -1066,18 +1105,19 @@ packages:
   super_editor:
     dependency: transitive
     description:
-      path: "../../../super_editor/super_editor"
-      relative: true
-    source: path
-    version: "0.3.0-dev.35"
+      name: super_editor
+      sha256: "5cc2e3eb208f2b385f1aa5f4e0cb910866bd0e4cbd6e7dbd832af4ce83a67525"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.0-dev.42"
   super_keyboard:
     dependency: transitive
     description:
       name: super_keyboard
-      sha256: "1a0a32dd799118554fb801822ae2eed7669fbbf7c754d94d240ec3e8ee7dbd67"
+      sha256: e3accebf33635f760efbd4d3c13f6484242a09e773ce8e711f4aa745d52b73b1
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.2"
+    version: "0.3.0"
   super_text_layout:
     dependency: transitive
     description:
@@ -1118,6 +1158,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.12"
+  text_table:
+    dependency: transitive
+    description:
+      name: text_table
+      sha256: a42b35675be614274b884ee482d4bdf4bdf707bc65de18cb8f1ad288c1beb1f4
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.3"
   two_dimensional_scrollables:
     dependency: transitive
     description:

@@ -1,4 +1,4 @@
-import 'package:example_data/example_data.dart';
+import 'package:data_models/example_data.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

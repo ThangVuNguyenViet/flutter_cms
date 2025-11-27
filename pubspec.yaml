@@ -1,0 +1,13 @@
+name: flutter_cms_workspace
+description: "Flutter CMS monorepo workspace"
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.7.2
+
+# Workspace configuration
+workspace:
+  - packages/flutter_cms
+  - packages/flutter_cms_annotation
+  - packages/flutter_cms_generator

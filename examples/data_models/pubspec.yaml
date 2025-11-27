@@ -11,7 +11,7 @@ dependencies:
   example_app:
     path: ../example_app
   flutter_cms:
-    path: ../../
+    path: ../../packages/flutter_cms
 
 dev_dependencies:
   lints: ^6.0.0

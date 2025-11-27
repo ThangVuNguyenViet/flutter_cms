@@ -1,5 +1,5 @@
 name: flutter_cms
-description: "A new Flutter project."
+description: "CMS studio interface with inputs, validators, and runtime components for Flutter CMS applications"
 publish_to: 'none'
 version: 0.1.0
 
@@ -7,16 +7,12 @@ environment:
   sdk: ^3.7.2
 
 dependencies:
+  flutter_cms_annotation:
+    path: ../flutter_cms_annotation
   dart_mappable: ^4.6.1
   flutter:
     sdk: flutter
-  form_builder_validators: ^11.2.0
   shadcn_ui: ^0.28.0
-  source_gen: ^4.0.0
-  code_builder: ^4.10.0
-  build: ^4.0.0
-  dart_style: ^3.0.0
-  pub_semver: ^2.1.4
   image_picker: ^1.1.2
   file_picker: ^8.1.4
   shared_preferences: ^2.2.2
@@ -24,9 +20,7 @@ dependencies:
   solidart: ^2.8.2
   flutter_solidart: ^2.7.1
   flutter_resizable_container: ^4.2.0
-  super_editor:
-    path: ../super_editor/super_editor
-  analyzer: ^8.4.1
+  super_editor: ^0.3.0-dev.42
 
 dev_dependencies:
   flutter_test:
@@ -37,8 +31,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-dependency_overrides:
-  test_api: 0.7.6
-  attributed_text:
-    path: ../super_editor/attributed_text

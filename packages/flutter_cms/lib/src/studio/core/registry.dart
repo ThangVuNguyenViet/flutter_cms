@@ -8,9 +8,9 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import '../../core/cms_data.dart';
-import '../../fields/base/field.dart';
+
 import '../components/forms/cms_form.dart';
 
 /// ColorField is now a built-in field type!

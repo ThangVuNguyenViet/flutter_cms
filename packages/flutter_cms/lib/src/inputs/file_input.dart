@@ -1,10 +1,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-
-import '../core/cms_data.dart';
-import '../fields/media/file_field.dart';
 
 @Preview(name: 'CmsFileInput')
 Widget preview() => ShadApp(

@@ -3,11 +3,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-
-import '../core/cms_data.dart';
-import '../fields/media/image_field.dart';
 
 @Preview(name: 'CmsImageInput')
 Widget preview() => ShadApp(

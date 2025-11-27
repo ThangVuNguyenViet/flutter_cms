@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import '../core/cms_data.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-
-import '../fields/primitive/url_field.dart';
 
 @Preview(name: 'CmsUrlInput')
 Widget preview() => ShadApp(

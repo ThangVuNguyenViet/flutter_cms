@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-
-import '../core/cms_data.dart';
-import '../fields/media/color_field.dart';
 
 /// Color picker input widget with full functionality
 class CmsColorInput extends StatefulWidget {

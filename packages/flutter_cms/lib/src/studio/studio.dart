@@ -5,12 +5,9 @@
 /// - Form components with reactive state
 /// - Navigation and layout components
 /// - Theme system integration
-///
 /// ## Usage
-///
 /// ```dart
 /// import 'package:flutter_cms/studio/studio.dart';
-///
 /// class MyApp extends StatelessWidget {
 ///   @override
 ///   Widget build(BuildContext context) {

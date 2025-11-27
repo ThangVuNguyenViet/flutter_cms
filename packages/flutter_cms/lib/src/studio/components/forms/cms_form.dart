@@ -1,26 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../../core/cms_data.dart';
-import '../../../fields/base/field.dart';
-import '../../../fields/complex/array_field.dart';
-import '../../../fields/complex/block_field.dart';
-import '../../../fields/complex/dropdown_field.dart';
-import '../../../fields/complex/geopoint_field.dart';
-import '../../../fields/complex/object_field.dart';
-import '../../../fields/complex/reference_field.dart';
-import '../../../fields/media/color_field.dart';
-import '../../../fields/media/file_field.dart';
-import '../../../fields/media/image_field.dart';
-import '../../../fields/primitive/boolean_field.dart';
-import '../../../fields/primitive/checkbox_field.dart';
-import '../../../fields/primitive/date_field.dart';
-import '../../../fields/primitive/datetime_field.dart';
-import '../../../fields/primitive/number_field.dart';
-import '../../../fields/primitive/slug_field.dart';
-import '../../../fields/primitive/string_field.dart';
-import '../../../fields/primitive/text_field.dart';
-import '../../../fields/primitive/url_field.dart';
 import '../../../inputs/array_input.dart';
 import '../../../inputs/block_input.dart';
 import '../../../inputs/boolean_input.dart';
@@ -34,8 +15,6 @@ import '../../../inputs/geopoint_input.dart';
 import '../../../inputs/image_input.dart';
 import '../../../inputs/number_input.dart';
 import '../../../inputs/object_input.dart';
-import '../../../inputs/reference_input.dart';
-import '../../../inputs/slug_input.dart';
 import '../../../inputs/string_input.dart';
 import '../../../inputs/text_input.dart';
 import '../../../inputs/url_input.dart';
@@ -125,12 +104,7 @@ class CmsFieldInputRegistry {
           data: data,
           onChanged: (value) => onChanged(field.name, value),
         );
-      case CmsSlugField():
-        return (_, data, onChanged) => CmsSlugInput(
-          field: field,
-          data: data,
-          onChanged: (value) => onChanged(field.name, value),
-        );
+
       case CmsImageField():
         return (_, data, onChanged) => CmsImageInput(
           field: field,
@@ -157,12 +131,6 @@ class CmsFieldInputRegistry {
         );
       case CmsObjectField():
         return (_, data, onChanged) => CmsObjectInput(
-          field: field,
-          data: data,
-          onChanged: (value) => onChanged(field.name, value),
-        );
-      case CmsReferenceField():
-        return (_, data, onChanged) => CmsReferenceInput(
           field: field,
           data: data,
           onChanged: (value) => onChanged(field.name, value),

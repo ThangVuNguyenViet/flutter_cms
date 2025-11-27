@@ -1,63 +1,49 @@
-/// Flutter CMS - A code-generation first CMS framework for Flutter
+/// Flutter CMS - Studio and runtime components for CMS applications
 ///
-/// This package provides annotation-driven CMS functionality with:
-/// - Type-safe code generation for fields and configurations
-/// - Reactive state management with SolidArt signals
-/// - Professional text editing with SuperEditor
-/// - Automatic serialization with dart_mappable
+/// This package provides the CMS studio interface with:
+/// - Complete CMS studio UI with document management
+/// - Input widgets for all field types with reactive state
+/// - Form validation and error handling
+/// - Professional text editing with SuperEditor integration
 ///
 /// ## Usage
 ///
 /// ```dart
 /// import 'package:flutter_cms/flutter_cms.dart';
 ///
-/// @CmsConfig()
-/// class BlogPost {
-///   @CmsStringFieldConfig()
-///   final String title;
-///
-///   @CmsTextFieldConfig()
-///   final String content;
-///
-///   const BlogPost({required this.title, required this.content});
+/// class MyApp extends StatelessWidget {
+///   @override
+///   Widget build(BuildContext context) {
+///     return ShadApp(
+///       home: CmsStudioShell(
+///         documentTypes: [...],
+///       ),
+///     );
+///   }
 /// }
 /// ```
 ///
-/// For a convenience import that includes all annotations, use:
+/// For annotations, import from flutter_cms_annotation:
 /// ```dart
-/// import 'package:flutter_cms/annotations.dart';
+/// import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 /// ```
 library;
 
-// Core abstractions and data models
-export 'src/core/annotations.dart';
+// Re-export annotations for convenience
+export 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
+
+// ============================================================================
+// CORE DATA MODELS
+// ============================================================================
 export 'src/core/cms_data.dart';
-// Utilities
+export 'src/core/serializable.dart';
+// ============================================================================
+// UTILITIES
+// ============================================================================
 export 'src/extensions/object_extensions.dart';
-// Field system
-export 'src/fields/base/field.dart';
-// Complex fields
-export 'src/fields/complex/array_field.dart';
-export 'src/fields/complex/block_field.dart';
-export 'src/fields/complex/dropdown_field.dart';
-export 'src/fields/complex/geopoint_field.dart';
-export 'src/fields/complex/object_field.dart';
-export 'src/fields/complex/reference_field.dart';
-// Media fields
-export 'src/fields/media/color_field.dart';
-export 'src/fields/media/file_field.dart';
-export 'src/fields/media/image_field.dart';
-// Primitive fields
-export 'src/fields/primitive/boolean_field.dart';
-export 'src/fields/primitive/checkbox_field.dart';
-export 'src/fields/primitive/date_field.dart';
-export 'src/fields/primitive/datetime_field.dart';
-export 'src/fields/primitive/number_field.dart';
-export 'src/fields/primitive/slug_field.dart';
-export 'src/fields/primitive/string_field.dart';
-export 'src/fields/primitive/text_field.dart';
-export 'src/fields/primitive/url_field.dart';
-// Input widgets (hide preview functions to avoid naming conflicts)
+// ============================================================================
+// INPUT WIDGETS
+// ============================================================================
 export 'src/inputs/array_input.dart';
 export 'src/inputs/block_input.dart' hide preview;
 export 'src/inputs/boolean_input.dart' hide preview;
@@ -71,9 +57,10 @@ export 'src/inputs/geopoint_input.dart' hide preview;
 export 'src/inputs/image_input.dart' hide preview;
 export 'src/inputs/number_input.dart' hide preview;
 export 'src/inputs/object_input.dart' hide preview;
-export 'src/inputs/reference_input.dart' hide preview;
-export 'src/inputs/slug_input.dart' hide preview;
 export 'src/inputs/string_input.dart' hide preview;
 export 'src/inputs/text_input.dart' hide preview;
 export 'src/inputs/url_input.dart' hide preview;
-export 'src/validators/validators.dart';
+// ============================================================================
+// STUDIO COMPONENTS
+// ============================================================================
+export 'src/studio/studio.dart';

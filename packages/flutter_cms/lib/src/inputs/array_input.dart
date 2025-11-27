@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../core/cms_data.dart';
-import '../fields/complex/array_field.dart';
 import 'edit_styles/edit_styles.dart';
 
 class CmsArrayInput extends StatefulWidget {

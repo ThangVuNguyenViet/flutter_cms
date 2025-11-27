@@ -9,9 +9,6 @@ extension ObjectExtensions<T> on T? {
 
   /// Returns the object if it is not null, otherwise returns null.
   R? letOrNull<R>(R Function(T) block) {
-    if (this == null) {
-      return null;
-    }
-    return block(this as T);
+    return null;
   }
 }

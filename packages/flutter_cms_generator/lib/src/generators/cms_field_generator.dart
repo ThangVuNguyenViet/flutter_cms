@@ -4,8 +4,8 @@ import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 
-import '../core/annotations.dart';
 import 'utils.dart';
 
 /// Extension to provide safe field access similar to widgetbook's readOrNull pattern

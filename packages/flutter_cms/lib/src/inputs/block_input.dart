@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import '../core/cms_data.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:super_editor/super_editor.dart';
-
-import '../fields/complex/block_field.dart';
 
 @Preview(name: 'CmsBlockInput')
 Widget preview() => ShadApp(

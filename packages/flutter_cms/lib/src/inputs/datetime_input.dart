@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-
-import '../core/cms_data.dart';
-import '../fields/primitive/datetime_field.dart';
 
 @Preview(name: 'CmsDateTimeInput')
 Widget preview() => ShadApp(

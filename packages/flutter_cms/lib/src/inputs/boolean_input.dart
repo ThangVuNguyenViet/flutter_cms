@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import '../core/cms_data.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-
-import '../fields/primitive/boolean_field.dart';
 
 @Preview(name: 'CmsBooleanInput')
 Widget preview() => ShadApp(
@@ -20,21 +18,18 @@ class CmsBooleanInput extends StatefulWidget {
   final CmsBooleanField field;
   final CmsData? data;
   final ValueChanged<bool?>? onChanged;
-
   const CmsBooleanInput({
     super.key,
     required this.field,
     this.data,
     this.onChanged,
   });
-
   @override
   State<CmsBooleanInput> createState() => _CmsBooleanInputState();
 }
 
 class _CmsBooleanInputState extends State<CmsBooleanInput> {
   late bool _value;
-
   @override
   void initState() {
     super.initState();
@@ -46,9 +41,7 @@ class _CmsBooleanInputState extends State<CmsBooleanInput> {
     if (widget.field.option.hidden) {
       return const SizedBox.shrink();
     }
-
     final theme = ShadTheme.of(context);
-
     return Row(
       children: [
         ShadSwitch(
