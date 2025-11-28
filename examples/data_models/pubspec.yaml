@@ -1,5 +1,6 @@
 name: data_models
 description: A starting point for Dart libraries or applications.
+publish_to: none
 version: 1.0.0
 # repository: https://github.com/my_org/my_repo
 
@@ -10,9 +11,14 @@ environment:
 dependencies:
   example_app:
     path: ../example_app
-  flutter_cms:
-    path: ../../packages/flutter_cms
+  flutter:
+    sdk: flutter
+  flutter_cms_annotation:
+    path: ../../packages/flutter_cms_annotation
+  dart_mappable: ^4.6.1
+  shadcn_ui: ^0.39.14
 
 dev_dependencies:
+  dart_mappable_builder: ^4.6.1
   lints: ^6.0.0
   test: ^1.25.6

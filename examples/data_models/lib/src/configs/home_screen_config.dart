@@ -3,8 +3,7 @@ import 'dart:async';
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:example_app/screens/homes_creen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cms/annotations.dart';
-import 'package:flutter_cms/studio.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 part 'home_screen_config.cms.g.dart';
@@ -17,7 +16,7 @@ part 'home_screen_config.mapper.dart';
 )
 @MappableClass(ignoreNull: false, includeCustomMappers: [ColorMapper()])
 class HomeScreenConfig
-    with HomeScreenConfigMappable, CmsConfigToDocument<HomeScreenConfig> {
+    with HomeScreenConfigMappable, Serializable<HomeScreenConfig> {
   // Hero Section
   @CmsStringFieldConfig(
     description: 'Title text displayed prominently in the hero section',

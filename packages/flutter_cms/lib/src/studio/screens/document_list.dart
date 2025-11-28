@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:flutter_solidart/flutter_solidart.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
@@ -31,20 +32,6 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
   @override
   void initState() {
     super.initState();
-  }
-
-  void _createNewDocument() {
-    if (widget.onCreateNew != null) {
-      widget.onCreateNew!();
-    }
-  }
-
-  void _openDocument(Map<String, dynamic> document) {
-    if (widget.onOpenDocument != null) {
-      // Generate a simple ID for now - in real implementation would use proper document ID
-      final documentId = document.hashCode.toString();
-      widget.onOpenDocument!(documentId);
-    }
   }
 
   List<Map<String, dynamic>> _getFilteredDocuments(

@@ -43,9 +43,6 @@ class _CmsStringInputState extends State<CmsStringInput> {
 
     // Listen to text changes
     _controller.addListener(_onTextChanged);
-    _undoController.addListener(
-      () => print('_undoController.value: ${_undoController.value}'),
-    );
   }
 
   void _onTextChanged() {

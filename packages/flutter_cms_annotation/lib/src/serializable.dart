@@ -1,5 +1,5 @@
 /// Interface for converting CMS configuration to a document format
-mixin CmsConfigToDocument<T> {
+mixin Serializable<T> {
   /// Convert this object to a JSON map representation
   ///
   /// Returns a `Map<String, dynamic>` that can be encoded to JSON string

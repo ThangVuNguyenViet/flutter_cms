@@ -1,6 +1,5 @@
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:solidart/solidart.dart';
-
-import '../config.dart';
 
 /// Global signal for the currently selected document type
 final selectedDocumentSignal = Signal<CmsDocumentType?>(null);

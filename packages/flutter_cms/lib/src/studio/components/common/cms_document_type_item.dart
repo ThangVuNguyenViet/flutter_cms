@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../core/config.dart';
 import '../../core/signals/cms_signals.dart';
 
 /// A navigation item widget for a CmsDocumentType

@@ -7,6 +7,7 @@ library flutter_cms_annotation;
 // Core annotations and data types
 export 'src/annotations.dart';
 export 'src/cms_data.dart';
+export 'src/config.dart';
 // Base field abstractions
 export 'src/fields/base/field.dart';
 // Complex field configurations
@@ -28,5 +29,6 @@ export 'src/fields/primitive/number_field.dart';
 export 'src/fields/primitive/string_field.dart';
 export 'src/fields/primitive/text_field.dart';
 export 'src/fields/primitive/url_field.dart';
+export 'src/serializable.dart';
 // Validators
 export 'src/validators/validators.dart';
