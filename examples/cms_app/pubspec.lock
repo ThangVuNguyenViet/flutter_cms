@@ -925,10 +925,10 @@ packages:
     dependency: "direct main"
     description:
       name: shadcn_ui
-      sha256: "8a31b3c78a97ad33942b9dcb55f1d77271d0605b9814dad7b81e3589bd8ab456"
+      sha256: "17b4d311fc9b8775a06d489716dce6848319b4a37093a5addf2197ec0073b24a"
       url: "https://pub.dev"
     source: hosted
-    version: "0.28.7"
+    version: "0.39.14"
   shared_preferences:
     dependency: transitive
     description:
@@ -1166,6 +1166,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.3"
+  theme_extensions_builder_annotation:
+    dependency: transitive
+    description:
+      name: theme_extensions_builder_annotation
+      sha256: "84069dfd7be08a34e4b3cf87cdb9ad56d7570974f67eaff7c867bc8ccd12d3f8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.0.0"
   two_dimensional_scrollables:
     dependency: transitive
     description:

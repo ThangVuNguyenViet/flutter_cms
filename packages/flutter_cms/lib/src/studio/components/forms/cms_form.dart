@@ -18,7 +18,8 @@ import '../../../inputs/object_input.dart';
 import '../../../inputs/string_input.dart';
 import '../../../inputs/text_input.dart';
 import '../../../inputs/url_input.dart';
-import '../../core/signals/cms_signals.dart';
+import '../../core/cms_provider.dart';
+import '../version/cms_version_history.dart';
 
 /// Type definition for field value change callbacks
 typedef OnFieldChanged = void Function(String fieldName, dynamic value);
@@ -168,6 +169,9 @@ class CmsForm extends StatefulWidget {
   final VoidCallback? onSave;
   final VoidCallback? onDiscard;
 
+  /// Callback when a field value changes
+  final OnFieldChanged? onFieldChanged;
+
   const CmsForm({
     super.key,
     required this.fields,
@@ -176,6 +180,7 @@ class CmsForm extends StatefulWidget {
     this.description,
     this.onSave,
     this.onDiscard,
+    this.onFieldChanged,
   });
 
   @override
@@ -184,8 +189,8 @@ class CmsForm extends StatefulWidget {
 
 class _CmsFormState extends State<CmsForm> {
   void _handleFieldChange(String fieldName, dynamic value) {
-    // Update the document signal field directly for real-time sync
-    documentDataSignal[fieldName] = value;
+    // Call the external callback if provided
+    widget.onFieldChanged?.call(fieldName, value);
   }
 
   Widget _buildFieldInput(CmsField field) {
@@ -214,6 +219,7 @@ class _CmsFormState extends State<CmsForm> {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
+    final viewModel = CmsProvider.of(context);
 
     return Column(
       children: [
@@ -224,12 +230,26 @@ class _CmsFormState extends State<CmsForm> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (widget.title != null)
-                  Text(widget.title!, style: theme.textTheme.h2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(widget.title!, style: theme.textTheme.h2),
+                      ),
+                      const SizedBox(width: 16),
+                      CmsVersionHistory(
+                        viewModel: viewModel,
+                        width: 240,
+                      ),
+                    ],
+                  ),
                 if (widget.description != null)
-                  Text(
-                    widget.description!,
-                    style: theme.textTheme.small.copyWith(
-                      color: theme.colorScheme.mutedForeground,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      widget.description!,
+                      style: theme.textTheme.small.copyWith(
+                        color: theme.colorScheme.mutedForeground,
+                      ),
                     ),
                   ),
                 const SizedBox(height: 12),

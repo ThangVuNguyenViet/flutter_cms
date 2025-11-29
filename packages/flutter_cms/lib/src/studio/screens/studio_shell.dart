@@ -3,7 +3,7 @@ import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_solidart/flutter_solidart.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../core/signals/cms_signals.dart';
+import '../core/cms_provider.dart';
 import 'document_editor.dart';
 import 'document_list.dart';
 
@@ -20,12 +20,13 @@ class CmsStudio extends StatefulWidget {
 class _CmsStudioState extends State<CmsStudio> {
   Widget _buildEditor() {
     final theme = ShadTheme.of(context);
+    final viewModel = CmsProvider.of(context);
 
     return Container(
       decoration: BoxDecoration(color: theme.colorScheme.background),
       child: SignalBuilder(
         builder: (context, child) {
-          final selectedDocument = selectedDocumentSignal.value;
+          final selectedDocument = viewModel.selectedDocumentType.value;
           if (selectedDocument == null) {
             return _buildEmptyState(
               icon: Icons.edit,
@@ -40,7 +41,6 @@ class _CmsStudioState extends State<CmsStudio> {
             fields: selectedDocument.fields,
             title: selectedDocument.title,
             description: selectedDocument.description,
-            documentId: 'new', // TODO: Handle document IDs properly
           );
         },
       ),
@@ -49,6 +49,7 @@ class _CmsStudioState extends State<CmsStudio> {
 
   Widget _buildContentPreview() {
     final theme = ShadTheme.of(context);
+    final viewModel = CmsProvider.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -57,7 +58,7 @@ class _CmsStudioState extends State<CmsStudio> {
       ),
       child: SignalBuilder(
         builder: (context, child) {
-          final selectedDocument = selectedDocumentSignal.value;
+          final selectedDocument = viewModel.selectedDocumentType.value;
           if (selectedDocument == null) {
             return _buildEmptyState(
               icon: Icons.visibility,
@@ -67,11 +68,23 @@ class _CmsStudioState extends State<CmsStudio> {
             );
           }
 
-          // Use the builder (now required)
-          return SignalBuilder(
-            builder: (context, child) {
-              final documentData = documentDataSignal.value;
-              if (documentData.isEmpty) {
+          // Use the selectedDocumentData resource for preview
+          final versionState = viewModel.selectedDocumentData.state;
+
+          return versionState.when<Widget>(
+            loading: () => _buildEmptyState(
+              icon: Icons.article,
+              title: 'Content Preview',
+              description: 'Loading document...',
+              showProgress: true,
+            ),
+            error: (error, stackTrace) => _buildEmptyState(
+              icon: Icons.error,
+              title: 'Error',
+              description: 'Failed to load document: $error',
+            ),
+            ready: (versionData) {
+              if (versionData == null) {
                 return _buildEmptyState(
                   icon: Icons.article,
                   title: 'Content Preview',
@@ -84,7 +97,7 @@ class _CmsStudioState extends State<CmsStudio> {
               // Wrap preview content with proper padding
               return Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: selectedDocument.builder(documentData),
+                child: selectedDocument.builder(versionData.data),
               );
             },
           );
@@ -95,6 +108,7 @@ class _CmsStudioState extends State<CmsStudio> {
 
   Widget _buildDocumentsList() {
     final theme = ShadTheme.of(context);
+    final viewModel = CmsProvider.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -103,7 +117,7 @@ class _CmsStudioState extends State<CmsStudio> {
       ),
       child: SignalBuilder(
         builder: (context, child) {
-          final selectedDocument = selectedDocumentSignal.value;
+          final selectedDocument = viewModel.selectedDocumentType.value;
 
           if (selectedDocument == null) {
             return _buildEmptyState(
@@ -119,22 +133,15 @@ class _CmsStudioState extends State<CmsStudio> {
               selectedDocument: selectedDocument,
               icon: Icons.description,
               onCreateNew: () {
-                selectedDocumentSignal.createNewDocument();
+                // Clear selections to create new document
+                viewModel.clearDocumentSelection();
               },
               onOpenDocument: (documentId) {
-                // Find and load the document by ID
-                final documents =
-                    selectedDocumentSignal.getDocumentsForSelectedType();
-                // For now, use hash code as simple ID lookup
-                final document = documents.firstWhere(
-                  (doc) => doc.hashCode.toString() == documentId,
-                  orElse:
-                      () =>
-                          documents.isNotEmpty
-                              ? documents.first
-                              : throw StateError('No documents found'),
-                );
-                documentDataSignal.value = document;
+                // Select the document by ID
+                final docId = int.tryParse(documentId);
+                if (docId != null) {
+                  viewModel.selectDocument(docId);
+                }
               },
             ),
           );
@@ -149,7 +156,7 @@ class _CmsStudioState extends State<CmsStudio> {
     return Container(
       width: 250,
       decoration: BoxDecoration(
-        color: theme.colorScheme.muted.withOpacity(0.3),
+        color: theme.colorScheme.muted.withValues(alpha: 0.3),
         border: Border(right: BorderSide(color: theme.colorScheme.border)),
       ),
       child: Column(
@@ -200,7 +207,7 @@ class _CmsStudioState extends State<CmsStudio> {
                 Container(
                   padding: const EdgeInsets.all(12.0),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, size: 32, color: theme.colorScheme.primary),

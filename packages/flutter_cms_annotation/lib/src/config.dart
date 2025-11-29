@@ -20,9 +20,6 @@ class CmsDocumentType<T extends Serializable<dynamic>> {
   /// Required builder function to create a widget from the config data
   final Widget Function(Map<String, dynamic> data) builder;
 
-  /// Tile builder function for displaying a summary tile
-  final Widget Function(Map<String, dynamic> data) tileBuilder;
-
   /// Function to create a default instance of T
   final T? defaultValue;
   const CmsDocumentType({
@@ -31,7 +28,6 @@ class CmsDocumentType<T extends Serializable<dynamic>> {
     required this.description,
     required this.fields,
     required this.builder,
-    required this.tileBuilder,
     this.defaultValue,
   });
 }

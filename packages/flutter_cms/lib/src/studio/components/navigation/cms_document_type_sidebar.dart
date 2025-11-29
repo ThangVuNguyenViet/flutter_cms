@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_solidart/flutter_solidart.dart';
 
-import '../../core/signals/cms_signals.dart';
+import '../../core/cms_provider.dart';
 import '../common/cms_document_type_decoration.dart';
 import '../common/cms_document_type_item.dart';
 
@@ -29,21 +29,24 @@ class _CmsDocumentTypeSidebarState extends State<CmsDocumentTypeSidebar> {
   void initState() {
     super.initState();
     // Auto-select the first document type if none is selected
-    if (widget.documentTypeDecorations.isNotEmpty &&
-        selectedDocumentSignal.value == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        selectedDocumentSignal.selectDocument(
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = CmsProvider.of(context);
+      if (widget.documentTypeDecorations.isNotEmpty &&
+          viewModel.selectedDocumentType.value == null) {
+        viewModel.selectDocumentType(
           widget.documentTypeDecorations.first.documentType,
         );
-      });
-    }
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = CmsProvider.of(context);
+
     return SignalBuilder(
       builder: (context, child) {
-        final selectedDocument = selectedDocumentSignal.value;
+        final selectedDocument = viewModel.selectedDocumentType.value;
         return Column(
           children: [
             if (widget.header != null) widget.header!,

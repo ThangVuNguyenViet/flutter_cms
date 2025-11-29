@@ -362,7 +362,6 @@ final $documentTypeName = CmsDocumentType<$className>(
   description: '$description',
   fields: $fieldsListName,
   builder: $className.configBuilder,
-  tileBuilder: $className.tileBuilder,
   defaultValue: $className.defaultValue,
 );\n''';
   }

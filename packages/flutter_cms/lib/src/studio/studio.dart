@@ -28,9 +28,10 @@ export 'components/common/cms_document_type_decoration.dart';
 export 'components/common/cms_document_type_item.dart';
 export 'components/common/default_cms_header.dart';
 export 'components/forms/cms_form.dart';
-export 'components/layout/three_pane_layout.dart';
 export 'components/navigation/cms_document_type_sidebar.dart';
+export 'components/version/cms_version_history.dart';
 // Core studio functionality
+export 'core/cms_provider.dart';
 export 'core/registry.dart';
 export 'core/signals/cms_signals.dart';
 // Main screens

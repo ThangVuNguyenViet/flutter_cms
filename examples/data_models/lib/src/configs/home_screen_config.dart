@@ -152,30 +152,6 @@ class HomeScreenConfig
     return HomeScreen(config: homeScreenConfig);
   }
 
-  static Widget tileBuilder(Map<String, dynamic> config) {
-    final homeScreenConfig = HomeScreenConfigMapper.fromMap(config);
-
-    return Builder(
-      builder: (context) {
-        return ShadCard(
-          title: Text(
-            homeScreenConfig.heroTitle,
-            style: ShadTheme.of(context).textTheme.h4,
-          ),
-          description: Text(
-            homeScreenConfig.heroSubtitle,
-            style: ShadTheme.of(context).textTheme.muted,
-            maxLines: 1,
-          ),
-          leading: Icon(
-            Icons.home,
-            size: 32,
-            color: ShadTheme.of(context).colorScheme.primary,
-          ),
-        );
-      },
-    );
-  }
 }
 
 class ColorMapper extends SimpleMapper<Color> {

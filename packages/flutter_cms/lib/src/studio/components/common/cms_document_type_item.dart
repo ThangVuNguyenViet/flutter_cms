@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../core/signals/cms_signals.dart';
+import '../../core/cms_provider.dart';
 
 /// A navigation item widget for a CmsDocumentType
 class CmsDocumentTypeItem extends StatelessWidget {
@@ -22,6 +22,7 @@ class CmsDocumentTypeItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
+    final viewModel = CmsProvider.of(context);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -30,8 +31,8 @@ class CmsDocumentTypeItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: () {
-            // Update the global signal
-            selectedDocumentSignal.selectDocument(documentType);
+            // Update the ViewModel
+            viewModel.selectDocumentType(documentType);
             // Call the optional onTap callback
             onTap?.call();
           },
