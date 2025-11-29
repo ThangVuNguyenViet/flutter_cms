@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
-import 'package:flutter_solidart/flutter_solidart.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../data/models/cms_document.dart';
@@ -42,15 +42,38 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
     final theme = ShadTheme.of(context);
     final viewModel = CmsProvider.of(context);
 
-    return SignalBuilder(
-      builder: (context, child) {
-        final resourceState = viewModel.documentsResource.state;
-        return resourceState.when<Widget>(
-          ready: (result) => _buildContent(context, theme, result),
-          loading: () => _buildLoading(theme),
-          error: (error, stackTrace) => _buildError(theme, error),
-        );
-      },
+    return Watch((context) {
+      final params = viewModel.queryParams.value;
+      if (params.documentType == null) {
+        return _buildEmpty(theme);
+      }
+
+      final resourceState = viewModel.documentsContainer(params).value;
+      return resourceState.map<Widget>(
+        data: (result) => _buildContent(context, theme, result),
+        loading: () => _buildLoading(theme),
+        error: (error, stackTrace) => _buildError(theme, error),
+      );
+    });
+  }
+
+  Widget _buildEmpty(ShadThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.folder_outlined,
+            size: 64,
+            color: theme.colorScheme.mutedForeground,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Select a document type',
+            style: theme.textTheme.large,
+          ),
+        ],
+      ),
     );
   }
 

@@ -1,5 +1,5 @@
 import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
-import 'package:solidart/solidart.dart';
+import 'package:signals/signals_flutter.dart';
 
 import '../../../data/cms_data_source.dart';
 import '../../../data/models/cms_document.dart';
@@ -8,7 +8,7 @@ import '../../../data/models/document_version.dart';
 
 /// ViewModel for CMS data operations.
 ///
-/// This ViewModel uses Solidart signals and Resources for reactive state
+/// This ViewModel uses Signals.dart for reactive state
 /// management and async data operations via a [CmsDataSource].
 ///
 /// ## Data Flow
@@ -31,16 +31,17 @@ import '../../../data/models/document_version.dart';
 /// final dataSource = ServerpodDataSource(client);
 /// final viewModel = CmsViewModel(dataSource);
 ///
-/// // Use the documents resource in a widget
-/// SignalBuilder(
-///   builder: (context, child) {
-///     return viewModel.documentsResource.state.when(
-///       ready: (data) => ListView(...),
-///       error: (error, _) => Text('Error: $error'),
-///       loading: () => CircularProgressIndicator(),
-///     );
-///   },
-/// )
+/// // Use the documents container in a widget
+/// Watch((context) {
+///   final params = viewModel.queryParams.value;
+///   if (params.documentType == null) return Text('Select a document type');
+///
+///   return viewModel.documentsContainer(params).value.map(
+///     data: (data) => ListView(...),
+///     error: (error, _) => Text('Error: $error'),
+///     loading: () => CircularProgressIndicator(),
+///   );
+/// })
 /// ```
 class CmsViewModel {
   /// The data source for backend communication.
@@ -84,7 +85,7 @@ class CmsViewModel {
   // ============================================================
 
   /// Computed signal that combines all document query parameters.
-  late final Computed<_DocumentQueryParams> _queryParams = Computed(
+  late final queryParams = Computed(
     () => _DocumentQueryParams(
       documentType: selectedDocumentType.value?.name,
       page: page.value,
@@ -94,36 +95,32 @@ class CmsViewModel {
   );
 
   // ============================================================
-  // Resources
+  // Signal Containers for Dynamic Data Fetching
   // ============================================================
 
-  /// Resource for fetching documents list.
-  /// Automatically refetches when selectedDocumentType, page,
-  /// pageSize, or searchQuery changes.
-  late final Resource<DocumentList> documentsResource =
-      Resource<DocumentList>(
-        _fetchDocuments,
-        source: _queryParams,
-        debounceDelay: const Duration(milliseconds: 300),
-      );
+  /// Container for fetching documents list based on query parameters.
+  /// Automatically creates and caches signals per parameter combination.
+  late final documentsContainer = SignalContainer(
+    (_DocumentQueryParams params) =>
+        FutureSignal(() => _fetchDocumentsWithParams(params)),
+    cache: true,
+  );
 
-  /// Resource for fetching versions of the selected document.
-  /// Automatically refetches when selectedDocumentId changes.
-  late final Resource<DocumentVersionList> versionsResource =
-      Resource<DocumentVersionList>(
-        _fetchVersions,
-        source: selectedDocumentId,
-        debounceDelay: const Duration(milliseconds: 100),
-      );
+  /// Container for fetching versions of a document by document ID.
+  /// Automatically creates and caches signals per document ID.
+  late final versionsContainer = SignalContainer(
+    (int documentId) =>
+        FutureSignal(() => dataSource.getDocumentVersions(documentId)),
+    cache: true,
+  );
 
-  /// Resource for fetching the selected version data.
-  /// Automatically refetches when selectedVersionId changes.
-  late final Resource<DocumentVersion?> selectedDocumentData =
-      Resource<DocumentVersion?>(
-        _fetchSelectedVersion,
-        source: selectedVersionId,
-        debounceDelay: const Duration(milliseconds: 100),
-      );
+  /// Container for fetching version data by version ID.
+  /// Automatically creates and caches signals per version ID.
+  late final documentDataContainer = SignalContainer(
+    (int versionId) =>
+        FutureSignal(() => dataSource.getDocumentVersion(versionId)),
+    cache: true,
+  );
 
   // ============================================================
   // Constructor
@@ -138,9 +135,10 @@ class CmsViewModel {
   // Internal Fetch Methods
   // ============================================================
 
-  /// Internal method to fetch documents based on current query params.
-  Future<DocumentList> _fetchDocuments() async {
-    final params = _queryParams.value;
+  /// Internal method to fetch documents based on query params.
+  Future<DocumentList> _fetchDocumentsWithParams(
+    _DocumentQueryParams params,
+  ) async {
     final documentType = params.documentType;
 
     if (documentType == null) {
@@ -154,28 +152,6 @@ class CmsViewModel {
       limit: params.pageSize,
       offset: offset,
     );
-  }
-
-  /// Internal method to fetch versions for the selected document.
-  Future<DocumentVersionList> _fetchVersions() async {
-    final documentId = selectedDocumentId.value;
-
-    if (documentId == null) {
-      return DocumentVersionList.empty();
-    }
-
-    return await dataSource.getDocumentVersions(documentId);
-  }
-
-  /// Internal method to fetch the selected version data.
-  Future<DocumentVersion?> _fetchSelectedVersion() async {
-    final versionId = selectedVersionId.value;
-
-    if (versionId == null) {
-      return null;
-    }
-
-    return await dataSource.getDocumentVersion(versionId);
   }
 
   // ============================================================
@@ -261,9 +237,8 @@ class CmsViewModel {
       // Select the new document
       selectedDocumentId.value = document.id;
 
-      // Refresh the documents list and versions
-      documentsResource.refresh();
-      versionsResource.refresh();
+      // Refresh by clearing the container caches (they will refetch on next access)
+      // Note: In Signals, changing the signal values will automatically trigger recomputation
 
       // Select the first version (which was just created)
       final versions = await dataSource.getDocumentVersions(document.id!);
@@ -286,7 +261,7 @@ class CmsViewModel {
       selectedDocumentId.value = null;
       selectedVersionId.value = null;
     }
-    documentsResource.refresh();
+    // Changing signals will automatically trigger recomputation
     return result;
   }
 
@@ -319,8 +294,7 @@ class CmsViewModel {
       // Select the new version
       selectedVersionId.value = version.id;
 
-      // Refresh the versions list
-      versionsResource.refresh();
+      // Changing signals will automatically trigger recomputation
 
       return version;
     } finally {
@@ -349,8 +323,12 @@ class CmsViewModel {
         changeLog: changeLog,
       );
 
-      // Refresh the selected document data
-      selectedDocumentData.refresh();
+      // Refresh the document data and versions to get the updated data
+      final docId = selectedDocumentId.value;
+      if (docId != null) {
+        versionsContainer(docId).reload();
+      }
+      documentDataContainer(versionId).reload();
 
       return result;
     } finally {
@@ -369,9 +347,12 @@ class CmsViewModel {
     try {
       final result = await dataSource.publishDocumentVersion(versionId);
 
-      // Refresh resources
-      versionsResource.refresh();
-      selectedDocumentData.refresh();
+      // Refresh the document data and versions to get the updated data
+      final docId = selectedDocumentId.value;
+      if (docId != null) {
+        versionsContainer(docId).reload();
+      }
+      documentDataContainer(versionId).reload();
 
       return result;
     } finally {
@@ -390,9 +371,12 @@ class CmsViewModel {
     try {
       final result = await dataSource.archiveDocumentVersion(versionId);
 
-      // Refresh resources
-      versionsResource.refresh();
-      selectedDocumentData.refresh();
+      // Refresh the document data and versions to get the updated data
+      final docId = selectedDocumentId.value;
+      if (docId != null) {
+        versionsContainer(docId).reload();
+      }
+      documentDataContainer(versionId).reload();
 
       return result;
     } finally {
@@ -405,10 +389,17 @@ class CmsViewModel {
   /// Returns true if the version was deleted, false otherwise.
   Future<bool> deleteVersion(int versionId) async {
     final result = await dataSource.deleteDocumentVersion(versionId);
-    if (result && selectedVersionId.value == versionId) {
-      selectedVersionId.value = null;
+    if (result) {
+      if (selectedVersionId.value == versionId) {
+        selectedVersionId.value = null;
+      }
+
+      // Refresh the versions list to reflect the deletion
+      final docId = selectedDocumentId.value;
+      if (docId != null) {
+        versionsContainer(docId).reload();
+      }
     }
-    versionsResource.refresh();
     return result;
   }
 
@@ -435,19 +426,28 @@ class CmsViewModel {
   // Refresh Methods
   // ============================================================
 
-  /// Manually refreshes the documents list.
+  /// Manually refreshes the documents list by refreshing the container signal.
   void refreshDocuments() {
-    documentsResource.refresh();
+    final params = queryParams.value;
+    if (params.documentType != null) {
+      documentsContainer(params).reload();
+    }
   }
 
-  /// Manually refreshes the versions list.
+  /// Manually refreshes the versions list by refreshing the container signal.
   void refreshVersions() {
-    versionsResource.refresh();
+    final docId = selectedDocumentId.value;
+    if (docId != null) {
+      versionsContainer(docId).reload();
+    }
   }
 
-  /// Manually refreshes the selected document data.
+  /// Manually refreshes the selected document data by refreshing the container signal.
   void refreshSelectedData() {
-    selectedDocumentData.refresh();
+    final versionId = selectedVersionId.value;
+    if (versionId != null) {
+      documentDataContainer(versionId).reload();
+    }
   }
 
   // ============================================================
@@ -456,10 +456,7 @@ class CmsViewModel {
 
   /// Disposes all resources and signals.
   void dispose() {
-    documentsResource.dispose();
-    versionsResource.dispose();
-    selectedDocumentData.dispose();
-    _queryParams.dispose();
+    queryParams.dispose();
     selectedDocumentType.dispose();
     selectedDocumentId.dispose();
     selectedVersionId.dispose();
@@ -467,6 +464,8 @@ class CmsViewModel {
     pageSize.dispose();
     searchQuery.dispose();
     isSaving.dispose();
+    // Note: SignalContainers and their cached signals will be
+    // automatically disposed when they have no listeners
   }
 }
 

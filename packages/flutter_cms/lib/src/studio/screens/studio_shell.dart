@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_solidart/flutter_solidart.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../core/cms_provider.dart';
@@ -24,10 +24,10 @@ class _CmsStudioState extends State<CmsStudio> {
 
     return Container(
       decoration: BoxDecoration(color: theme.colorScheme.background),
-      child: SignalBuilder(
-        builder: (context, child) {
-          final selectedDocument = viewModel.selectedDocumentType.value;
-          if (selectedDocument == null) {
+      child: Watch((context) {
+        final viewModel = CmsProvider.of(context);
+        final selectedDocument = viewModel.selectedDocumentType.value;
+        if (selectedDocument == null) {
             return _buildEmptyState(
               icon: Icons.edit,
               title: 'Document Editor',
@@ -42,8 +42,7 @@ class _CmsStudioState extends State<CmsStudio> {
             title: selectedDocument.title,
             description: selectedDocument.description,
           );
-        },
-      ),
+        }),
     );
   }
 
@@ -56,10 +55,10 @@ class _CmsStudioState extends State<CmsStudio> {
         color: theme.colorScheme.card,
         border: Border(left: BorderSide(color: theme.colorScheme.border)),
       ),
-      child: SignalBuilder(
-        builder: (context, child) {
-          final selectedDocument = viewModel.selectedDocumentType.value;
-          if (selectedDocument == null) {
+      child: Watch((context) {
+        final viewModel = CmsProvider.of(context);
+        final selectedDocument = viewModel.selectedDocumentType.value;
+        if (selectedDocument == null) {
             return _buildEmptyState(
               icon: Icons.visibility,
               title: 'Content Preview',
@@ -68,10 +67,19 @@ class _CmsStudioState extends State<CmsStudio> {
             );
           }
 
-          // Use the selectedDocumentData resource for preview
-          final versionState = viewModel.selectedDocumentData.state;
+          // Use the documentDataContainer for preview
+          final versionId = viewModel.selectedVersionId.value;
+          if (versionId == null) {
+            return _buildEmptyState(
+              icon: Icons.article,
+              title: 'Content Preview',
+              description: 'No version selected',
+            );
+          }
 
-          return versionState.when<Widget>(
+          final versionState = viewModel.documentDataContainer(versionId).value;
+
+          return versionState.map<Widget>(
             loading: () => _buildEmptyState(
               icon: Icons.article,
               title: 'Content Preview',
@@ -83,7 +91,7 @@ class _CmsStudioState extends State<CmsStudio> {
               title: 'Error',
               description: 'Failed to load document: $error',
             ),
-            ready: (versionData) {
+            data: (versionData) {
               if (versionData == null) {
                 return _buildEmptyState(
                   icon: Icons.article,
@@ -101,8 +109,7 @@ class _CmsStudioState extends State<CmsStudio> {
               );
             },
           );
-        },
-      ),
+        }),
     );
   }
 
@@ -115,11 +122,11 @@ class _CmsStudioState extends State<CmsStudio> {
         color: theme.colorScheme.card,
         border: Border(right: BorderSide(color: theme.colorScheme.border)),
       ),
-      child: SignalBuilder(
-        builder: (context, child) {
-          final selectedDocument = viewModel.selectedDocumentType.value;
+      child: Watch((context) {
+        final viewModel = CmsProvider.of(context);
+        final selectedDocument = viewModel.selectedDocumentType.value;
 
-          if (selectedDocument == null) {
+        if (selectedDocument == null) {
             return _buildEmptyState(
               icon: Icons.folder_open,
               title: 'Documents',
@@ -145,8 +152,7 @@ class _CmsStudioState extends State<CmsStudio> {
               },
             ),
           );
-        },
-      ),
+        }),
     );
   }
 

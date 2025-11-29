@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_solidart/flutter_solidart.dart';
+import 'package:signals/signals_flutter.dart';
 
 import '../../core/cms_provider.dart';
 import '../common/cms_document_type_decoration.dart';
@@ -44,10 +44,9 @@ class _CmsDocumentTypeSidebarState extends State<CmsDocumentTypeSidebar> {
   Widget build(BuildContext context) {
     final viewModel = CmsProvider.of(context);
 
-    return SignalBuilder(
-      builder: (context, child) {
-        final selectedDocument = viewModel.selectedDocumentType.value;
-        return Column(
+    return Watch((context) {
+      final selectedDocument = viewModel.selectedDocumentType.value;
+      return Column(
           children: [
             if (widget.header != null) widget.header!,
             Expanded(
@@ -73,7 +72,6 @@ class _CmsDocumentTypeSidebarState extends State<CmsDocumentTypeSidebar> {
             if (widget.footer != null) widget.footer!,
           ],
         );
-      },
-    );
+    });
   }
 }

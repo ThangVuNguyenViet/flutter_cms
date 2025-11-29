@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_solidart/flutter_solidart.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../data/models/document_version.dart';
@@ -7,8 +7,8 @@ import '../../core/signals/cms_signals.dart';
 
 /// A version history dropdown component that displays and manages document versions.
 ///
-/// This component uses Solidart's [SignalBuilder] to reactively display
-/// versions from the [CmsViewModel.versionsResource]. It provides:
+/// This component uses Signals' [Watch] widget to reactively display
+/// versions from the [CmsViewModel.versionsContainer]. It provides:
 ///
 /// - Compact dropdown trigger showing selected version
 /// - Expandable list with all versions
@@ -60,10 +60,17 @@ class _CmsVersionHistoryState extends State<CmsVersionHistory> {
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
 
-    return SignalBuilder(
-      builder: (context, child) {
-        return widget.viewModel.versionsResource.state.when(
-          ready: (data) {
+    return Watch((context) {
+      final docId = widget.viewModel.selectedDocumentId.value;
+
+      if (docId == null) {
+        return _buildLoadingTrigger(context, theme);
+      }
+
+      final versionsState = widget.viewModel.versionsContainer(docId).value;
+
+      return versionsState.map(
+        data: (data) {
             final selectedVersion = data.versions.firstWhere(
               (v) => v.id == widget.viewModel.selectedVersionId.value,
               orElse: () => data.versions.isNotEmpty
@@ -89,12 +96,11 @@ class _CmsVersionHistoryState extends State<CmsVersionHistory> {
           error: (error, stackTrace) {
             return _buildErrorTrigger(context, theme, error);
           },
-          loading: () {
-            return _buildLoadingTrigger(context, theme);
-          },
-        );
-      },
-    );
+        loading: () {
+          return _buildLoadingTrigger(context, theme);
+        },
+      );
+    });
   }
 
   /// Builds the dropdown trigger button.

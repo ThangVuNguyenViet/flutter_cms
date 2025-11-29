@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
-import 'package:flutter_solidart/flutter_solidart.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../data/models/document_version.dart';
@@ -71,13 +71,17 @@ class _CmsDocumentEditorState extends State<CmsDocumentEditor> {
   Future<void> _discardDocument() async {
     try {
       final viewModel = CmsProvider.of(context);
+      final versionId = viewModel.selectedVersionId.value;
+
       // Reset form data to the version data or defaults
-      final versionState = viewModel.selectedDocumentData.state;
-      if (versionState.isReady && versionState.value != null) {
-        setState(() {
-          _formData = Map<String, dynamic>.from(versionState.value!.data);
-          _hasUnsavedChanges = false;
-        });
+      if (versionId != null) {
+        final versionState = viewModel.documentDataContainer(versionId).value;
+        if (versionState is AsyncData<DocumentVersion> && versionState.value != null) {
+          setState(() {
+            _formData = Map<String, dynamic>.from(versionState.value!.data);
+            _hasUnsavedChanges = false;
+          });
+        }
       } else {
         // Reset to default values
         final selectedDoc = viewModel.selectedDocumentType.value;
@@ -120,18 +124,27 @@ class _CmsDocumentEditorState extends State<CmsDocumentEditor> {
   Widget build(BuildContext context) {
     final viewModel = CmsProvider.of(context);
 
-    return SignalBuilder(
-      builder: (context, child) {
-        final isSaving = viewModel.isSaving.value;
-        final versionState = viewModel.selectedDocumentData.state;
-        final currentVersionId = viewModel.selectedVersionId.value;
+    return Watch((context) {
+      final isSaving = viewModel.isSaving.value;
+      final versionId = viewModel.selectedVersionId.value;
 
-        return versionState.when<Widget>(
-          loading: () => const Center(child: ShadProgress()),
-          error: (error, stackTrace) => Center(
-            child: Text('Error loading document: $error'),
-          ),
-          ready: (versionData) {
+      if (versionId == null) {
+        // No version selected - use defaults
+        final selectedDoc = viewModel.selectedDocumentType.value;
+        final versionData = null as DocumentVersion?;
+
+        return _buildEditorWithData(versionData, isSaving, selectedDoc);
+      }
+
+      final versionState = viewModel.documentDataContainer(versionId).value;
+      final currentVersionId = versionId;
+
+      return versionState.map<Widget>(
+        loading: () => const Center(child: ShadProgress()),
+        error: (error, stackTrace) => Center(
+          child: Text('Error loading document: $error'),
+        ),
+        data: (versionData) {
             // Initialize form data from version data when version changes
             if (currentVersionId != _lastVersionId) {
               _lastVersionId = currentVersionId;
@@ -163,9 +176,30 @@ class _CmsDocumentEditorState extends State<CmsDocumentEditor> {
 
             return _buildEditor(versionData, isSaving, _hasUnsavedChanges);
           },
-        );
-      },
-    );
+      );
+    });
+  }
+
+  Widget _buildEditorWithData(
+    DocumentVersion? versionData,
+    bool isSaving,
+    CmsDocumentType? selectedDoc,
+  ) {
+    // Initialize form data if needed
+    if (_lastVersionId == null) {
+      _lastVersionId = -1;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _formData =
+                selectedDoc?.defaultValue?.toMap() ?? <String, dynamic>{};
+            _hasUnsavedChanges = false;
+          });
+        }
+      });
+    }
+
+    return _buildEditor(versionData, isSaving, _hasUnsavedChanges);
   }
 
   Widget _buildEditor(
