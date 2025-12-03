@@ -128,6 +128,9 @@ abstract class CmsDataSource {
 
   /// Retrieves a paginated list of versions for a specific document.
   ///
+  /// Each [DocumentVersion] in the result will have its `data` field
+  /// populated with the reconstructed document data at that version.
+  ///
   /// [documentId] - The ID of the document to get versions for
   /// [limit] - Maximum number of versions to return (default: 20)
   /// [offset] - Number of versions to skip for pagination (default: 0)
@@ -150,38 +153,46 @@ abstract class CmsDataSource {
   /// Throws [CmsDataSourceException] if the operation fails.
   Future<DocumentVersion?> getDocumentVersion(int versionId);
 
-  /// Creates a new version for a document.
+  /// Get the document data for a specific version
+  /// Reconstructs data from CRDT operations at the version's HLC snapshot
+  Future<Map<String, dynamic>?> getDocumentVersionData(int versionId);
+
+  /// Creates a new version snapshot for a document at the current state.
   ///
   /// [documentId] - The ID of the document to create a version for
-  /// [data] - The version data as a map
   /// [status] - The initial status (default: 'draft')
   /// [changeLog] - Optional description of what changed
   ///
   /// Returns the created [DocumentVersion] with its assigned ID.
   ///
+  /// Note: Version data is stored as CRDT operations, not in the version itself.
+  /// Use getDocumentVersionData() to retrieve the data for a version.
+  ///
   /// Throws [CmsDataSourceException] if the operation fails.
   /// Throws [CmsAuthenticationException] if authentication is required.
   Future<DocumentVersion> createDocumentVersion(
-    int documentId,
-    Map<String, dynamic> data, {
+    int documentId, {
     String status = 'draft',
     String? changeLog,
   });
 
-  /// Updates an existing document version.
+  /// Updates document data using CRDT operations (partial updates).
+  /// Only changed fields need to be provided - they will be merged automatically.
   ///
-  /// [versionId] - The ID of the version to update
-  /// [data] - The new version data
-  /// [changeLog] - Optional updated changelog
+  /// [documentId] - The ID of the document to update
+  /// [updates] - Map of field updates (only changed fields)
+  /// [sessionId] - Optional session ID for collaborative editing tracking
   ///
-  /// Returns the updated [DocumentVersion], or null if not found.
+  /// Returns the updated [CmsDocument] with merged data.
+  ///
+  /// Note: This uses CRDT operations for conflict-free collaborative editing.
   ///
   /// Throws [CmsDataSourceException] if the operation fails.
   /// Throws [CmsAuthenticationException] if authentication is required.
-  Future<DocumentVersion?> updateDocumentVersion(
-    int versionId,
-    Map<String, dynamic> data, {
-    String? changeLog,
+  Future<CmsDocument> updateDocumentData(
+    int documentId,
+    Map<String, dynamic> updates, {
+    String? sessionId,
   });
 
   /// Publishes a document version, making it the current published version.
@@ -271,10 +282,7 @@ abstract class CmsDataSource {
   /// Returns a list of [MediaFile].
   ///
   /// Throws [CmsDataSourceException] if the operation fails.
-  Future<List<MediaFile>> listMedia({
-    int limit = 50,
-    int offset = 0,
-  });
+  Future<List<MediaFile>> listMedia({int limit = 50, int offset = 0});
 }
 
 // ============================================================
@@ -337,10 +345,7 @@ class CmsValidationException extends CmsDataSourceException {
   /// Map of field names to error messages
   final Map<String, String>? fieldErrors;
 
-  const CmsValidationException(
-    super.message, {
-    this.fieldErrors,
-  });
+  const CmsValidationException(super.message, {this.fieldErrors});
 
   @override
   String toString() {

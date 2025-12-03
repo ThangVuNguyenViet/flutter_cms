@@ -5,47 +5,14 @@ import '../../../data/cms_data_source.dart';
 import '../../../data/models/cms_document.dart';
 import '../../../data/models/document_list.dart';
 import '../../../data/models/document_version.dart';
+import 'cms_document_view_model.dart';
 
-/// ViewModel for CMS data operations.
-///
-/// This ViewModel uses Signals.dart for reactive state
-/// management and async data operations via a [CmsDataSource].
-///
-/// ## Data Flow
-///
-/// ```
-/// selectedDocumentType -> documentsResource (list of documents)
-///                      |
-///                      v
-/// selectedDocumentId -> versionsResource (list of versions for document)
-///                    |
-///                    v
-/// selectedVersionId -> selectedDocumentData (version data for editing)
-/// ```
-///
-/// ## Usage
-///
-/// ```dart
-/// // Create with a data source
-/// final client = Client('http://localhost:8080/');
-/// final dataSource = ServerpodDataSource(client);
-/// final viewModel = CmsViewModel(dataSource);
-///
-/// // Use the documents container in a widget
-/// Watch((context) {
-///   final params = viewModel.queryParams.value;
-///   if (params.documentType == null) return Text('Select a document type');
-///
-///   return viewModel.documentsContainer(params).value.map(
-///     data: (data) => ListView(...),
-///     error: (error, _) => Text('Error: $error'),
-///     loading: () => CircularProgressIndicator(),
-///   );
-/// })
-/// ```
 class CmsViewModel {
   /// The data source for backend communication.
   final CmsDataSource dataSource;
+
+  /// Document-specific view model
+  final CmsDocumentViewModel documentViewModel;
 
   // ============================================================
   // Selection Signals
@@ -53,9 +20,6 @@ class CmsViewModel {
 
   /// Signal for the currently selected document type
   final selectedDocumentType = Signal<CmsDocumentType?>(null);
-
-  /// Signal for the currently selected document ID (null for new documents)
-  final selectedDocumentId = Signal<int?>(null);
 
   /// Signal for the currently selected version ID
   final selectedVersionId = Signal<int?>(null);
@@ -129,7 +93,7 @@ class CmsViewModel {
   /// Creates a new CmsViewModel.
   ///
   /// [dataSource] - The data source for backend communication.
-  CmsViewModel(this.dataSource);
+  CmsViewModel({required this.dataSource, required this.documentViewModel});
 
   // ============================================================
   // Internal Fetch Methods
@@ -161,14 +125,14 @@ class CmsViewModel {
   /// Selects a document type and clears any current selection.
   void selectDocumentType(CmsDocumentType? documentType) {
     selectedDocumentType.value = documentType;
-    selectedDocumentId.value = null;
+    documentViewModel.documentId.value = null;
     selectedVersionId.value = null;
   }
 
   /// Clears the selected document type and all selections.
   void clearSelection() {
     selectedDocumentType.value = null;
-    selectedDocumentId.value = null;
+    documentViewModel.documentId.value = null;
     selectedVersionId.value = null;
   }
 
@@ -178,13 +142,7 @@ class CmsViewModel {
 
   /// Selects a document by ID, which will trigger fetching its versions.
   void selectDocument(int documentId) {
-    selectedDocumentId.value = documentId;
-    selectedVersionId.value = null;
-  }
-
-  /// Clears the selected document.
-  void clearDocumentSelection() {
-    selectedDocumentId.value = null;
+    documentViewModel.documentId.value = documentId;
     selectedVersionId.value = null;
   }
 
@@ -235,7 +193,7 @@ class CmsViewModel {
       );
 
       // Select the new document
-      selectedDocumentId.value = document.id;
+      documentViewModel.documentId.value = document.id;
 
       // Refresh by clearing the container caches (they will refetch on next access)
       // Note: In Signals, changing the signal values will automatically trigger recomputation
@@ -257,8 +215,8 @@ class CmsViewModel {
   /// Returns true if the document was deleted, false otherwise.
   Future<bool> deleteDocument(int documentId) async {
     final result = await dataSource.deleteDocument(documentId);
-    if (result && selectedDocumentId.value == documentId) {
-      selectedDocumentId.value = null;
+    if (result && documentViewModel.documentId.value == documentId) {
+      documentViewModel.documentId.value = null;
       selectedVersionId.value = null;
     }
     // Changing signals will automatically trigger recomputation
@@ -266,75 +224,40 @@ class CmsViewModel {
   }
 
   // ============================================================
-  // Version Operations
+  // Document Data Operations
   // ============================================================
 
-  /// Creates a new version for the current document.
+  /// Updates the current document data using CRDT operations (partial updates).
+  /// Only changed fields need to be provided - they will be merged automatically.
   ///
-  /// [data] - The version data
-  /// [changeLog] - Optional description of what changed
+  /// [data] - Map of field updates (only changed fields)
   ///
-  /// Returns the created version data.
-  Future<DocumentVersion?> createVersion(
-    Map<String, dynamic> data, {
-    String? changeLog,
-  }) async {
-    final documentId = selectedDocumentId.value;
+  /// Returns the updated document.
+  Future<CmsDocument?> updateDocumentData(Map<String, dynamic> data) async {
+    final documentId = documentViewModel.documentId.value;
     if (documentId == null) return null;
 
     isSaving.value = true;
     try {
-      final version = await dataSource.createDocumentVersion(
-        documentId,
-        data,
-        status: 'draft',
-        changeLog: changeLog,
+      final result = await dataSource.updateDocumentData(documentId, data);
+
+      // Refresh the documents list to show updated data
+      final params = _DocumentQueryParams(
+        documentType: selectedDocumentType.value?.name,
+        page: page.value,
+        pageSize: pageSize.value,
       );
-
-      // Select the new version
-      selectedVersionId.value = version.id;
-
-      // Changing signals will automatically trigger recomputation
-
-      return version;
-    } finally {
-      isSaving.value = false;
-    }
-  }
-
-  /// Updates the currently selected version.
-  ///
-  /// [data] - The updated version data
-  /// [changeLog] - Optional updated changelog
-  ///
-  /// Returns the updated version data, or null if no version is selected.
-  Future<DocumentVersion?> updateVersion(
-    Map<String, dynamic> data, {
-    String? changeLog,
-  }) async {
-    final versionId = selectedVersionId.value;
-    if (versionId == null) return null;
-
-    isSaving.value = true;
-    try {
-      final result = await dataSource.updateDocumentVersion(
-        versionId,
-        data,
-        changeLog: changeLog,
-      );
-
-      // Refresh the document data and versions to get the updated data
-      final docId = selectedDocumentId.value;
-      if (docId != null) {
-        versionsContainer(docId).reload();
-      }
-      documentDataContainer(versionId).reload();
+      documentsContainer(params).reload();
 
       return result;
     } finally {
       isSaving.value = false;
     }
   }
+
+  // ============================================================
+  // Version Status Operations
+  // ============================================================
 
   /// Publishes the currently selected version.
   ///
@@ -348,7 +271,7 @@ class CmsViewModel {
       final result = await dataSource.publishDocumentVersion(versionId);
 
       // Refresh the document data and versions to get the updated data
-      final docId = selectedDocumentId.value;
+      final docId = documentViewModel.documentId.value;
       if (docId != null) {
         versionsContainer(docId).reload();
       }
@@ -372,7 +295,7 @@ class CmsViewModel {
       final result = await dataSource.archiveDocumentVersion(versionId);
 
       // Refresh the document data and versions to get the updated data
-      final docId = selectedDocumentId.value;
+      final docId = documentViewModel.documentId.value;
       if (docId != null) {
         versionsContainer(docId).reload();
       }
@@ -395,7 +318,7 @@ class CmsViewModel {
       }
 
       // Refresh the versions list to reflect the deletion
-      final docId = selectedDocumentId.value;
+      final docId = documentViewModel.documentId.value;
       if (docId != null) {
         versionsContainer(docId).reload();
       }
@@ -436,7 +359,7 @@ class CmsViewModel {
 
   /// Manually refreshes the versions list by refreshing the container signal.
   void refreshVersions() {
-    final docId = selectedDocumentId.value;
+    final docId = documentViewModel.documentId.value;
     if (docId != null) {
       versionsContainer(docId).reload();
     }
@@ -458,7 +381,7 @@ class CmsViewModel {
   void dispose() {
     queryParams.dispose();
     selectedDocumentType.dispose();
-    selectedDocumentId.dispose();
+    documentViewModel.dispose();
     selectedVersionId.dispose();
     page.dispose();
     pageSize.dispose();

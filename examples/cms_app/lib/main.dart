@@ -1,6 +1,8 @@
 import 'package:data_models/example_data.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cms/flutter_cms.dart';
 import 'package:flutter_cms/studio.dart';
+import 'package:flutter_cms_be_client/flutter_cms_be_client.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 void main() {
@@ -16,7 +18,8 @@ class MyApp extends StatelessWidget {
       theme: _buildCmsTheme(),
       // darkTheme: _buildCmsDarkTheme(),
       home: Scaffold(
-        body: CmsStudio(
+        body: CmsStudioApp(
+          dataSource: CloudDataSource(Client('http://localhost:8080/')),
           header: const DefaultCmsHeader(
             name: 'example-cms',
             title: 'Example CMS',

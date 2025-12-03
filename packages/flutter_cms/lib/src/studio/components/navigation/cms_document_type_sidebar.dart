@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:signals/signals_flutter.dart';
 
-import '../../core/cms_provider.dart';
+import '../../providers/studio_provider.dart';
 import '../common/cms_document_type_decoration.dart';
 import '../common/cms_document_type_item.dart';
 
@@ -30,7 +30,7 @@ class _CmsDocumentTypeSidebarState extends State<CmsDocumentTypeSidebar> {
     super.initState();
     // Auto-select the first document type if none is selected
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = CmsProvider.of(context);
+      final viewModel = cmsViewModelProvider.of(context);
       if (widget.documentTypeDecorations.isNotEmpty &&
           viewModel.selectedDocumentType.value == null) {
         viewModel.selectDocumentType(
@@ -42,36 +42,36 @@ class _CmsDocumentTypeSidebarState extends State<CmsDocumentTypeSidebar> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = CmsProvider.of(context);
+    final viewModel = cmsViewModelProvider.of(context);
 
     return Watch((context) {
       final selectedDocument = viewModel.selectedDocumentType.value;
       return Column(
-          children: [
-            if (widget.header != null) widget.header!,
-            Expanded(
-              child: ListView(
-                padding: widget.padding ?? const EdgeInsets.all(8),
-                children: [
-                  ...widget.documentTypeDecorations.map((decoration) {
-                    final isSelected =
-                        selectedDocument?.name == decoration.documentType.name;
+        children: [
+          if (widget.header != null) widget.header!,
+          Expanded(
+            child: ListView(
+              padding: widget.padding ?? const EdgeInsets.all(8),
+              children: [
+                ...widget.documentTypeDecorations.map((decoration) {
+                  final isSelected =
+                      selectedDocument?.name == decoration.documentType.name;
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: CmsDocumentTypeItem(
-                        documentType: decoration.documentType,
-                        isSelected: isSelected,
-                        icon: decoration.icon,
-                      ),
-                    );
-                  }),
-                ],
-              ),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: CmsDocumentTypeItem(
+                      documentType: decoration.documentType,
+                      isSelected: isSelected,
+                      icon: decoration.icon,
+                    ),
+                  );
+                }),
+              ],
             ),
-            if (widget.footer != null) widget.footer!,
-          ],
-        );
+          ),
+          if (widget.footer != null) widget.footer!,
+        ],
+      );
     });
   }
 }

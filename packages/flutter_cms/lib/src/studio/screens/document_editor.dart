@@ -1,58 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
-import 'package:signals/signals_flutter.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:signals/signals_flutter.dart';
 
 import '../../data/models/document_version.dart';
 import '../components/forms/cms_form.dart';
-import '../core/cms_provider.dart';
+import '../providers/studio_provider.dart';
 
 /// Document editor widget that dynamically generates forms based on fields
 class CmsDocumentEditor extends StatefulWidget {
   final List<CmsField> fields;
   final String? title;
-  final String? description;
 
-  const CmsDocumentEditor({
-    super.key,
-    required this.fields,
-    this.title,
-    this.description,
-  });
+  const CmsDocumentEditor({super.key, required this.fields, this.title});
 
   @override
   State<CmsDocumentEditor> createState() => _CmsDocumentEditorState();
 }
 
-class _CmsDocumentEditorState extends State<CmsDocumentEditor> {
-  /// Local state for form data that can be edited
-  Map<String, dynamic> _formData = {};
+class _CmsDocumentEditorState extends State<CmsDocumentEditor>
+    with SignalsMixin {
+  /// Signal for edited document data (working copy)
+  late final MapSignal<String, dynamic> editedData;
 
-  /// Whether we have unsaved changes
-  bool _hasUnsavedChanges = false;
-
-  /// Track the last version ID to detect when we need to reset form data
-  int? _lastVersionId;
+  @override
+  void initState() {
+    final viewModel = cmsViewModelProvider.of(context);
+    final selectedDoc = viewModel.selectedDocumentType.value;
+    editedData = createMapSignal(selectedDoc?.defaultValue?.toMap() ?? {});
+    super.initState();
+  }
 
   Future<void> _saveDocument() async {
-    final viewModel = CmsProvider.of(context);
+    final viewModel = cmsViewModelProvider.of(context);
     try {
-      final versionId = viewModel.selectedVersionId.value;
+      final docId = viewModel.documentViewModel.documentId.value;
+      final dataToSave = editedData.value;
 
-      if (versionId != null) {
-        // Update existing version
-        await viewModel.updateVersion(_formData);
+      if (docId != null) {
+        // Update existing document data
+        await viewModel.updateDocumentData(dataToSave);
       } else {
-        // Create new document with initial version
-        // Extract title from form data or use default
-        final title = _formData['title']?.toString() ?? 'Untitled Document';
-        final slug = _formData['slug']?.toString();
-        await viewModel.createDocument(title, _formData, slug: slug);
-      }
+        final documentViewModel = documentViewModelProvider.of(context);
+        final title = documentViewModel.title.value;
+        final slug = documentViewModel.slug.value;
 
-      setState(() {
-        _hasUnsavedChanges = false;
-      });
+        if (title.isEmpty || slug.isEmpty) {
+          ShadToaster.of(context).show(
+            const ShadToast(
+              description: Text(
+                'Title and Slug are required to create a document',
+              ),
+            ),
+          );
+          return;
+        }
+
+        // Create new document with initial version
+        await viewModel.createDocument(title, dataToSave, slug: slug);
+      }
 
       if (mounted) {
         ShadToaster.of(context).show(
@@ -70,33 +76,22 @@ class _CmsDocumentEditorState extends State<CmsDocumentEditor> {
 
   Future<void> _discardDocument() async {
     try {
-      final viewModel = CmsProvider.of(context);
+      final viewModel = cmsViewModelProvider.of(context);
       final versionId = viewModel.selectedVersionId.value;
 
-      // Reset form data to the version data or defaults
       if (versionId != null) {
+        // Reset to original version data
         final versionState = viewModel.documentDataContainer(versionId).value;
-        if (versionState is AsyncData<DocumentVersion> && versionState.value != null) {
-          setState(() {
-            _formData = Map<String, dynamic>.from(versionState.value!.data);
-            _hasUnsavedChanges = false;
-          });
+        if (versionState is AsyncData<DocumentVersion?> &&
+            versionState.value?.data != null) {
+          editedData.value = Map<String, dynamic>.from(
+            versionState.value!.data!,
+          );
         }
       } else {
         // Reset to default values
         final selectedDoc = viewModel.selectedDocumentType.value;
-        if (selectedDoc?.defaultValue != null) {
-          final defaultInstance = selectedDoc!.defaultValue!;
-          setState(() {
-            _formData = defaultInstance.toMap();
-            _hasUnsavedChanges = false;
-          });
-        } else {
-          setState(() {
-            _formData = {};
-            _hasUnsavedChanges = false;
-          });
-        }
+        editedData.value = selectedDoc?.defaultValue?.toMap() ?? {};
       }
 
       if (mounted) {
@@ -113,125 +108,107 @@ class _CmsDocumentEditorState extends State<CmsDocumentEditor> {
     }
   }
 
-  void _onFieldChanged(String fieldName, dynamic value) {
-    setState(() {
-      _formData[fieldName] = value;
-      _hasUnsavedChanges = true;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final viewModel = CmsProvider.of(context);
+    final viewModel = cmsViewModelProvider.of(context);
 
     return Watch((context) {
       final isSaving = viewModel.isSaving.value;
       final versionId = viewModel.selectedVersionId.value;
 
       if (versionId == null) {
-        // No version selected - use defaults
+        // No version selected - use editedData or defaults
         final selectedDoc = viewModel.selectedDocumentType.value;
-        final versionData = null as DocumentVersion?;
+        final data = editedData.value.isEmpty
+            ? (selectedDoc?.defaultValue?.toMap() ?? {})
+            : editedData.value;
 
-        return _buildEditorWithData(versionData, isSaving, selectedDoc);
+        // Initialize editedData if empty
+        if (editedData.value.isEmpty && selectedDoc?.defaultValue != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            editedData.value = selectedDoc!.defaultValue!.toMap();
+          });
+        }
+
+        return _buildEditor(data, isSaving);
       }
 
       final versionState = viewModel.documentDataContainer(versionId).value;
-      final currentVersionId = versionId;
 
       return versionState.map<Widget>(
         loading: () => const Center(child: ShadProgress()),
-        error: (error, stackTrace) => Center(
-          child: Text('Error loading document: $error'),
-        ),
+        error: (error, stackTrace) =>
+            Center(child: Text('Error loading document: $error')),
         data: (versionData) {
-            // Initialize form data from version data when version changes
-            if (currentVersionId != _lastVersionId) {
-              _lastVersionId = currentVersionId;
-              if (versionData != null) {
-                // Schedule the state update for after build
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    setState(() {
-                      _formData = Map<String, dynamic>.from(versionData.data);
-                      _hasUnsavedChanges = false;
-                    });
-                  }
-                });
-              } else {
-                // No version selected - reset to defaults
-                final selectedDoc = viewModel.selectedDocumentType.value;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    setState(() {
-                      _formData =
-                          selectedDoc?.defaultValue?.toMap() ??
-                          <String, dynamic>{};
-                      _hasUnsavedChanges = false;
-                    });
-                  }
-                });
-              }
-            }
+          final versionDataMap = versionData?.data ?? {};
 
-            return _buildEditor(versionData, isSaving, _hasUnsavedChanges);
-          },
+          // Initialize editedData from version data if not already set
+          if (editedData.value.isEmpty && versionDataMap.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              editedData.value = Map<String, dynamic>.from(versionDataMap);
+            });
+          }
+
+          // Use editedData for display (working copy)
+          final displayData = editedData.value.isEmpty
+              ? versionDataMap
+              : editedData.value;
+
+          return _buildEditor(displayData, isSaving);
+        },
       );
     });
   }
 
-  Widget _buildEditorWithData(
-    DocumentVersion? versionData,
-    bool isSaving,
-    CmsDocumentType? selectedDoc,
-  ) {
-    // Initialize form data if needed
-    if (_lastVersionId == null) {
-      _lastVersionId = -1;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            _formData =
-                selectedDoc?.defaultValue?.toMap() ?? <String, dynamic>{};
-            _hasUnsavedChanges = false;
-          });
+  Widget _buildEditor(Map<String, dynamic> documentData, bool isSaving) {
+    return Watch((context) {
+      final viewModel = cmsViewModelProvider.of(context);
+      final versionId = viewModel.selectedVersionId.value;
+
+      // Compute hasUnsavedChanges by comparing editedData with version data
+      bool hasUnsavedChanges = false;
+      if (versionId != null) {
+        final versionState = viewModel.documentDataContainer(versionId).value;
+        if (versionState is AsyncData<DocumentVersion?>) {
+          final originalData = versionState.value?.data ?? {};
+          final edited = editedData.value;
+
+          // Check if there are changes
+          if (edited.length != originalData.length) {
+            hasUnsavedChanges = true;
+          } else {
+            for (final key in edited.keys) {
+              if (edited[key] != originalData[key]) {
+                hasUnsavedChanges = true;
+                break;
+              }
+            }
+          }
         }
-      });
-    }
+      } else {
+        // For new documents, check if editedData is not empty
+        hasUnsavedChanges = editedData.value.isNotEmpty;
+      }
 
-    return _buildEditor(versionData, isSaving, _hasUnsavedChanges);
-  }
-
-  Widget _buildEditor(
-    DocumentVersion? versionData,
-    bool isSaving,
-    bool hasUnsavedChanges,
-  ) {
-    // Use form data if available, otherwise use version data or empty map
-    final displayData =
-        _formData.isNotEmpty
-            ? _formData
-            : (versionData?.data ?? <String, dynamic>{});
-
-    return Stack(
-      children: [
-        CmsForm(
-          fields: widget.fields,
-          data: Map<String, dynamic>.from(displayData),
-          title: widget.title,
-          description: widget.description,
-          onSave: isSaving ? null : _saveDocument,
-          onDiscard: isSaving || !hasUnsavedChanges ? null : _discardDocument,
-          onFieldChanged: _onFieldChanged,
-        ),
-        if (isSaving)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.3),
-              child: const Center(child: ShadProgress()),
-            ),
+      return Stack(
+        children: [
+          CmsForm(
+            fields: widget.fields,
+            data: Map<String, dynamic>.from(documentData),
+            title: widget.title,
+            onSave: isSaving ? null : _saveDocument,
+            onDiscard: isSaving || !hasUnsavedChanges ? null : _discardDocument,
+            onFieldChanged: (fieldName, value) => editedData[fieldName] = value,
           ),
-      ],
-    );
+          if (isSaving)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.3),
+                child: const Center(child: ShadProgress()),
+              ),
+            ),
+        ],
+      );
+    });
   }
 }

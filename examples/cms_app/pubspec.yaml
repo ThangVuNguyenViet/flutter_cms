@@ -44,6 +44,10 @@ dependencies:
   intl: ^0.20.2
   shadcn_ui: ^0.39.14
 
+  # Cloud data source
+  flutter_cms_be_client:
+    path: ../../../flutter_cms_be/flutter_cms_be_client
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -69,8 +73,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  assets:
-    - assets/
+  # assets:
+  #   - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

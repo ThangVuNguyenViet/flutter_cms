@@ -5,26 +5,17 @@
 /// - Form components with reactive state
 /// - Navigation and layout components
 /// - Theme system integration
-///
 /// ## Usage
-///
 /// ```dart
-/// import 'package:flutter_cms/studio.dart';
-///
+/// import 'package:flutter_cms/studio/studio.dart';
 /// class MyApp extends StatelessWidget {
 ///   @override
 ///   Widget build(BuildContext context) {
 ///     return ShadApp(
-///       home: CmsStudio(
-///         header: DefaultCmsHeader(
-///           name: 'my-cms',
-///           title: 'My CMS',
-///         ),
-///         sidebar: CmsDocumentTypeSidebar(
-///           documentTypeDecorations: [
-///             // Your document type decorations
-///           ],
-///         ),
+///       home: CmsStudioShell(
+///         documentTypes: [
+///           // Your CMS document types
+///         ],
 ///       ),
 ///     );
 ///   }
@@ -32,4 +23,19 @@
 /// ```
 library;
 
-export 'src/studio/studio.dart';
+// UI Components
+export 'src/studio/components/common/cms_document_type_decoration.dart';
+export 'src/studio/components/common/cms_document_type_item.dart';
+export 'src/studio/components/common/default_cms_header.dart';
+export 'src/studio/components/forms/cms_form.dart';
+export 'src/studio/components/navigation/cms_document_type_sidebar.dart';
+export 'src/studio/components/version/cms_version_history.dart';
+// Core studio functionality
+export 'src/studio/core/registry.dart';
+export 'src/studio/core/view_models/cms_view_model.dart';
+export 'src/studio/screens/cms_studio.dart';
+// Main screens
+export 'src/studio/screens/document_editor.dart';
+export 'src/studio/screens/document_list.dart';
+// Theme
+export 'src/studio/theme/theme.dart';

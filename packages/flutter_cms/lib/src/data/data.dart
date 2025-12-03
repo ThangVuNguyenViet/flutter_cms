@@ -22,8 +22,8 @@ library;
 // Abstract interface
 export 'cms_data_source.dart';
 
-// Serverpod implementation
-export 'serverpod_data_source.dart';
+// Serverpod implementation is in flutter_cms_be_client package
+// export 'serverpod_data_source.dart';
 
 // Models
 export 'models/cms_document.dart';

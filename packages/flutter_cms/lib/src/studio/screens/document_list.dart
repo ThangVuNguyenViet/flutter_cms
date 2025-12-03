@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cms_annotation/flutter_cms_annotation.dart';
-import 'package:signals/signals_flutter.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:signals/signals_flutter.dart';
 
 import '../../data/models/cms_document.dart';
 import '../../data/models/document_list.dart';
-import '../core/cms_provider.dart';
-import '../core/signals/cms_signals.dart';
+import '../core/view_models/cms_view_model.dart';
+import '../providers/studio_provider.dart';
 
 /// Document list view for browsing multiple documents of a type
 class CmsDocumentListView extends StatefulWidget {
-  final CmsDocumentType selectedDocument;
+  final CmsDocumentType selectedDocumentType;
   final IconData? icon;
   final String? filter;
-  final VoidCallback? onCreateNew;
   final void Function(String documentId)? onOpenDocument;
 
   const CmsDocumentListView({
     super.key,
-    required this.selectedDocument,
+    required this.selectedDocumentType,
     this.icon,
     this.filter,
-    this.onCreateNew,
     this.onOpenDocument,
   });
 
@@ -31,6 +29,9 @@ class CmsDocumentListView extends StatefulWidget {
 
 class _CmsDocumentListViewState extends State<CmsDocumentListView> {
   String _searchQuery = '';
+  bool _isCreatingNew = false;
+  final _titleController = TextEditingController();
+  final _slugController = TextEditingController();
 
   @override
   void initState() {
@@ -38,9 +39,16 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
   }
 
   @override
+  void dispose() {
+    _titleController.dispose();
+    _slugController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final viewModel = CmsProvider.of(context);
+    final viewModel = cmsViewModelProvider.of(context);
 
     return Watch((context) {
       final params = viewModel.queryParams.value;
@@ -64,13 +72,13 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
         children: [
           Icon(
             Icons.folder_outlined,
-            size: 64,
+            size: 40,
             color: theme.colorScheme.mutedForeground,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
             'Select a document type',
-            style: theme.textTheme.large,
+            style: theme.textTheme.muted.copyWith(fontSize: 14),
           ),
         ],
       ),
@@ -83,8 +91,11 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const ShadProgress(),
-          const SizedBox(height: 16),
-          Text('Loading documents...', style: theme.textTheme.muted),
+          const SizedBox(height: 12),
+          Text(
+            'Loading documents...',
+            style: theme.textTheme.muted.copyWith(fontSize: 13),
+          ),
         ],
       ),
     );
@@ -97,20 +108,22 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
         children: [
           Icon(
             Icons.error_outline,
-            size: 64,
+            size: 40,
             color: theme.colorScheme.destructive,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
             'Failed to load documents',
-            style: theme.textTheme.large.copyWith(
+            style: theme.textTheme.muted.copyWith(
               color: theme.colorScheme.destructive,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             error.toString(),
-            style: theme.textTheme.muted,
+            style: theme.textTheme.muted.copyWith(fontSize: 12),
             textAlign: TextAlign.center,
           ),
         ],
@@ -123,128 +136,207 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
     ShadThemeData theme,
     DocumentList result,
   ) {
-    final viewModel = CmsProvider.of(context);
+    final viewModel = cmsViewModelProvider.of(context);
     final documents = result.documents;
-    final filteredDocuments = _getFilteredDocuments(
-      documents.map((doc) => doc.activeVersionData ?? {}).toList(),
-    );
+    final filteredDocuments = documents.where((doc) {
+      if (_searchQuery.isEmpty) return true;
+      final query = _searchQuery.toLowerCase();
+      return doc.title.toLowerCase().contains(query);
+    }).toList();
 
     return Column(
       children: [
         // Header with search and create button
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: theme.colorScheme.border, width: 1),
+        Row(
+          children: [
+            if (widget.icon != null) ...[
+              Icon(widget.icon, size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+            ],
+            Expanded(
+              child: Text(
+                widget.selectedDocumentType.title,
+                style: theme.textTheme.large.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            ShadIconButton.secondary(
+              onPressed: () {
+                setState(() {
+                  _isCreatingNew = !_isCreatingNew;
+                  if (!_isCreatingNew) {
+                    _titleController.clear();
+                    _slugController.clear();
+                  }
+                });
+              },
+              icon: Icon(_isCreatingNew ? Icons.close : Icons.add, size: 16),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ShadInputFormField(
+          placeholder: const Text('Search documents...'),
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value;
+            });
+          },
+          trailing: const Icon(Icons.search),
+        ),
+        // Search bar
+        if (widget.filter != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              'Filter: ${widget.filter}',
+              style: theme.textTheme.small.copyWith(
+                color: theme.colorScheme.mutedForeground,
+                fontStyle: FontStyle.italic,
+                fontSize: 11,
+              ),
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  if (widget.icon != null) ...[
-                    Icon(
-                      widget.icon,
-                      size: 28,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.selectedDocument.title,
-                          style: theme.textTheme.h2,
-                        ),
-                        Text(
-                          widget.selectedDocument.description,
-                          style: theme.textTheme.small.copyWith(
-                            color: theme.colorScheme.mutedForeground,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ShadInputFormField(
-                placeholder: const Text('Search documents...'),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-                trailing: const Icon(Icons.search),
-              ),
-              // Search bar
-              if (widget.filter != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Filter: ${widget.filter}',
-                    style: theme.textTheme.small.copyWith(
-                      color: theme.colorScheme.mutedForeground,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
         // Document list
         Expanded(
-          child:
-              filteredDocuments.isEmpty
-                  ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.inbox,
-                          size: 64,
+          child: filteredDocuments.isEmpty && !_isCreatingNew
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inbox,
+                        size: 40,
+                        color: theme.colorScheme.mutedForeground,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _searchQuery.isEmpty
+                            ? 'No documents yet'
+                            : 'No documents match your search',
+                        style: theme.textTheme.muted.copyWith(
                           color: theme.colorScheme.mutedForeground,
+                          fontSize: 14,
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _searchQuery.isEmpty
-                              ? 'No documents yet'
-                              : 'No documents match your search',
-                          style: theme.textTheme.large.copyWith(
-                            color: theme.colorScheme.mutedForeground,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                  : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: result.documents.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final doc = result.documents[index];
-                      return _buildDocumentTile(context, theme, doc, viewModel);
-                    },
+                      ),
+                    ],
                   ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  itemCount: (_isCreatingNew ? 1 : 0) + result.documents.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 6),
+                  itemBuilder: (context, index) {
+                    if (_isCreatingNew && index == 0) {
+                      return _buildInlineCreateForm(context, theme, viewModel);
+                    }
+                    final docIndex = _isCreatingNew ? index - 1 : index;
+                    final doc = result.documents[docIndex];
+                    return _buildDocumentTile(context, theme, doc, viewModel);
+                  },
+                ),
         ),
       ],
     );
   }
 
-  List<Map<String, dynamic>> _getFilteredDocuments(
-    List<Map<String, dynamic>> documents,
+  Widget _buildInlineCreateForm(
+    BuildContext context,
+    ShadThemeData theme,
+    CmsViewModel viewModel,
   ) {
-    if (_searchQuery.isEmpty) {
-      return documents;
-    }
-    return documents.where((doc) {
-      final searchText = doc.values.whereType<String>().join(' ').toLowerCase();
-      return searchText.contains(_searchQuery.toLowerCase());
-    }).toList();
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.05),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Create New Document',
+            style: theme.textTheme.muted.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ShadInputFormField(
+            controller: _titleController,
+            placeholder: const Text('Document title'),
+            onChanged: (value) {
+              // Auto-generate slug from title
+              final slug = value
+                  .toLowerCase()
+                  .replaceAll(RegExp(r'[^\w\s-]'), '')
+                  .replaceAll(RegExp(r'\s+'), '-')
+                  .replaceAll(RegExp(r'-+'), '-')
+                  .trim();
+              _slugController.text = slug;
+            },
+          ),
+          const SizedBox(height: 8),
+          ShadInputFormField(
+            controller: _slugController,
+            placeholder: const Text('slug (auto-generated)'),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ShadButton.outline(
+                  onPressed: () {
+                    setState(() {
+                      _isCreatingNew = false;
+                      _titleController.clear();
+                      _slugController.clear();
+                    });
+                  },
+                  size: ShadButtonSize.sm,
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ShadButton(
+                  onPressed: () {
+                    if (_titleController.text.trim().isNotEmpty &&
+                        _slugController.text.trim().isNotEmpty) {
+                      // Save title and slug to the document view model signals
+                      viewModel.documentViewModel.title.value = _titleController.text.trim();
+                      viewModel.documentViewModel.slug.value = _slugController.text.trim();
+
+                      // Clear documentId to indicate this is a new document
+                      viewModel.documentViewModel.documentId.value = null;
+
+                      // Clear versionId as well
+                      viewModel.selectedVersionId.value = null;
+
+                      setState(() {
+                        _isCreatingNew = false;
+                        _titleController.clear();
+                        _slugController.clear();
+                      });
+                    }
+                  },
+                  size: ShadButtonSize.sm,
+                  child: const Text('Create'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildDocumentTile(
@@ -253,7 +345,7 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
     CmsDocument doc,
     CmsViewModel viewModel,
   ) {
-    final isSelected = viewModel.selectedDocumentId.value == doc.id;
+    final isSelected = viewModel.documentViewModel.documentId.value == doc.id;
 
     return Container(
       decoration: BoxDecoration(
@@ -264,11 +356,11 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
           color: isSelected
               ? theme.colorScheme.primary.withValues(alpha: 0.4)
               : theme.colorScheme.border,
-          width: isSelected ? 2 : 1,
+          width: isSelected ? 1.5 : 1,
         ),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: InkWell(
         onTap: () {
           if (doc.id != null) {
@@ -283,8 +375,9 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
                 Expanded(
                   child: Text(
                     doc.title,
-                    style: theme.textTheme.large.copyWith(
+                    style: theme.textTheme.muted.copyWith(
                       fontWeight: FontWeight.w600,
+                      fontSize: 14,
                       color: isSelected
                           ? theme.colorScheme.primary
                           : theme.colorScheme.foreground,
@@ -294,35 +387,36 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
                 if (isSelected)
                   Icon(
                     Icons.check_circle,
-                    size: 20,
+                    size: 16,
                     color: theme.colorScheme.primary,
                   ),
               ],
             ),
             if (doc.slug != null) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
               Text(
                 '/${doc.slug}',
                 style: theme.textTheme.small.copyWith(
                   color: theme.colorScheme.mutedForeground,
                   fontFamily: 'monospace',
+                  fontSize: 11,
                 ),
               ),
             ],
             if (doc.isDefault) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(3),
                 ),
                 child: Text(
                   'DEFAULT',
                   style: theme.textTheme.small.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w600,
-                    fontSize: 10,
+                    fontSize: 9,
                   ),
                 ),
               ),
@@ -333,4 +427,3 @@ class _CmsDocumentListViewState extends State<CmsDocumentListView> {
     );
   }
 }
-

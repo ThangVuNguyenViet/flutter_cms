@@ -18,7 +18,7 @@ import '../../../inputs/object_input.dart';
 import '../../../inputs/string_input.dart';
 import '../../../inputs/text_input.dart';
 import '../../../inputs/url_input.dart';
-import '../../core/cms_provider.dart';
+import '../../providers/studio_provider.dart';
 import '../version/cms_version_history.dart';
 
 /// Type definition for field value change callbacks
@@ -165,7 +165,6 @@ class CmsForm extends StatefulWidget {
   final List<CmsField> fields;
   final Map<String, dynamic> data;
   final String? title;
-  final String? description;
   final VoidCallback? onSave;
   final VoidCallback? onDiscard;
 
@@ -177,7 +176,6 @@ class CmsForm extends StatefulWidget {
     required this.fields,
     this.data = const {},
     this.title,
-    this.description,
     this.onSave,
     this.onDiscard,
     this.onFieldChanged,
@@ -195,10 +193,9 @@ class _CmsFormState extends State<CmsForm> {
 
   Widget _buildFieldInput(CmsField field) {
     final fieldName = field.name;
-    final data =
-        widget.data[fieldName] != null
-            ? CmsData(value: widget.data[fieldName], path: fieldName)
-            : null;
+    final data = widget.data[fieldName] != null
+        ? CmsData(value: widget.data[fieldName], path: fieldName)
+        : null;
 
     // Look up the builder for this field type in the registry
     final builder = CmsFieldInputRegistry.getBuilder(field);
@@ -219,7 +216,7 @@ class _CmsFormState extends State<CmsForm> {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final viewModel = CmsProvider.of(context);
+    final viewModel = cmsViewModelProvider.of(context);
 
     return Column(
       children: [
@@ -229,29 +226,9 @@ class _CmsFormState extends State<CmsForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                CmsVersionHistory(viewModel: viewModel, width: 240),
                 if (widget.title != null)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(widget.title!, style: theme.textTheme.h2),
-                      ),
-                      const SizedBox(width: 16),
-                      CmsVersionHistory(
-                        viewModel: viewModel,
-                        width: 240,
-                      ),
-                    ],
-                  ),
-                if (widget.description != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      widget.description!,
-                      style: theme.textTheme.small.copyWith(
-                        color: theme.colorScheme.mutedForeground,
-                      ),
-                    ),
-                  ),
+                  Text(widget.title!, style: theme.textTheme.h2),
                 const SizedBox(height: 12),
                 // Dynamic form fields
                 ...widget.fields.map((field) {

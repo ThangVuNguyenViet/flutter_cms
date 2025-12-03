@@ -1,4 +1,29 @@
-import 'dart:convert';
+/// Status of a document version
+enum DocumentVersionStatus {
+  /// Version is being edited and not visible to public
+  draft('draft'),
+
+  /// Version is published and visible to public
+  published('published'),
+
+  /// Version is archived and hidden from public
+  archived('archived'),
+
+  /// Version is scheduled to be published at a future date
+  scheduled('scheduled');
+
+  const DocumentVersionStatus(this.value);
+
+  final String value;
+
+  /// Parse from string value
+  static DocumentVersionStatus fromString(String value) {
+    return DocumentVersionStatus.values.firstWhere(
+      (status) => status.value == value,
+      orElse: () => DocumentVersionStatus.draft,
+    );
+  }
+}
 
 /// Platform-agnostic document version model.
 ///
@@ -14,11 +39,11 @@ class DocumentVersion {
   /// The version number (1, 2, 3, etc.)
   final int versionNumber;
 
-  /// The status of this version (e.g., 'draft', 'published', 'archived')
-  final String status;
+  /// The status of this version
+  final DocumentVersionStatus status;
 
-  /// The version's data as a flexible map structure
-  final Map<String, dynamic> data;
+  /// The document data at this version (reconstructed from CRDT operations)
+  final Map<String, dynamic>? data;
 
   /// Optional changelog describing what changed in this version
   final String? changeLog;
@@ -43,7 +68,7 @@ class DocumentVersion {
     required this.documentId,
     required this.versionNumber,
     required this.status,
-    required this.data,
+    this.data,
     this.changeLog,
     this.publishedAt,
     this.scheduledAt,
@@ -53,23 +78,23 @@ class DocumentVersion {
   });
 
   /// Whether this version is a draft
-  bool get isDraft => status == 'draft';
+  bool get isDraft => status == DocumentVersionStatus.draft;
 
   /// Whether this version is published
-  bool get isPublished => status == 'published';
+  bool get isPublished => status == DocumentVersionStatus.published;
 
   /// Whether this version is archived
-  bool get isArchived => status == 'archived';
+  bool get isArchived => status == DocumentVersionStatus.archived;
 
   /// Whether this version is scheduled for future publishing
-  bool get isScheduled => status == 'scheduled' && scheduledAt != null;
+  bool get isScheduled => status == DocumentVersionStatus.scheduled && scheduledAt != null;
 
   /// Creates a copy of this version with the given fields replaced.
   DocumentVersion copyWith({
     int? id,
     int? documentId,
     int? versionNumber,
-    String? status,
+    DocumentVersionStatus? status,
     Map<String, dynamic>? data,
     String? changeLog,
     DateTime? publishedAt,
@@ -83,7 +108,7 @@ class DocumentVersion {
       documentId: documentId ?? this.documentId,
       versionNumber: versionNumber ?? this.versionNumber,
       status: status ?? this.status,
-      data: data ?? Map<String, dynamic>.from(this.data),
+      data: data ?? this.data,
       changeLog: changeLog ?? this.changeLog,
       publishedAt: publishedAt ?? this.publishedAt,
       scheduledAt: scheduledAt ?? this.scheduledAt,
@@ -95,23 +120,12 @@ class DocumentVersion {
 
   /// Creates a [DocumentVersion] from a JSON map.
   factory DocumentVersion.fromJson(Map<String, dynamic> json) {
-    final rawData = json['data'];
-    Map<String, dynamic> parsedData;
-
-    if (rawData is String) {
-      parsedData = jsonDecode(rawData) as Map<String, dynamic>;
-    } else if (rawData is Map<String, dynamic>) {
-      parsedData = rawData;
-    } else {
-      parsedData = {};
-    }
-
     return DocumentVersion(
       id: json['id'] as int?,
       documentId: json['documentId'] as int,
       versionNumber: json['versionNumber'] as int,
-      status: json['status'] as String,
-      data: parsedData,
+      status: DocumentVersionStatus.fromString(json['status'] as String),
+      data: json['data'] as Map<String, dynamic>?,
       changeLog: json['changeLog'] as String?,
       publishedAt: json['publishedAt'] != null
           ? DateTime.parse(json['publishedAt'] as String)
@@ -135,8 +149,8 @@ class DocumentVersion {
       if (id != null) 'id': id,
       'documentId': documentId,
       'versionNumber': versionNumber,
-      'status': status,
-      'data': data,
+      'status': status.value,
+      if (data != null) 'data': data,
       if (changeLog != null) 'changeLog': changeLog,
       if (publishedAt != null) 'publishedAt': publishedAt!.toIso8601String(),
       if (scheduledAt != null) 'scheduledAt': scheduledAt!.toIso8601String(),
